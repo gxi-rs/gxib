@@ -18,12 +18,13 @@ fn main() {
     // parse cargo.toml
     let cargo_toml_path = &format!("{}/Cargo.toml", cli_interface.dir)[..];
     let cargo_toml_path = Path::new(cargo_toml_path);
-
-    let toml_parse = { parse_cargo_toml(&read(&cargo_toml_path).unwrap()) };
+    // parse Cargo.toml
+    let mut cargo_toml = { parse_cargo_toml(&read(&cargo_toml_path).unwrap()) };
+    // match sub commands
     match cli_interface.subcmds {
-        Web(web_cmd) => web_pipeline(web_cmd),
-        Desktop(desktop_args) => desktop_pipeline(desktop_args),
+        Web(web_cmd) => web_pipeline(web_cmd, &mut cargo_toml),
+        Desktop(desktop_args) => desktop_pipeline(desktop_args, &mut cargo_toml),
     }
     // write to Cargo.toml file
-    write(&cargo_toml_path, toml_parse.to_string());
+    write(&cargo_toml_path, cargo_toml.to_string());
 }
