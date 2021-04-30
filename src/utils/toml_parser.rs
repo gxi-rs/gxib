@@ -56,22 +56,26 @@ fn test_parse_cargo_toml() {
         let cargo_toml = parse_cargo_toml("".as_bytes());
         assert_eq!(cargo_toml.toml.to_string(), format!("[{}.gxi]\nversion = \"\"\n", DEPENDENCIES_STR))
     }
-    //with dependency
     {
-        let cargo_toml = parse_cargo_toml(format!(r#"
-            [{}]
-            k = ""
-            gxi = "0.0.1"
-        "#, DEPENDENCIES_STR).as_bytes());
-        assert_eq!(cargo_toml.toml.to_string(), format!("[{dep}]\nk = \"\"\n\n[{dep}.gxi]\nversion = \"0.0.1\"\n", dep = DEPENDENCIES_STR))
-    }
-    {
-        let cargo_toml = parse_cargo_toml(format!(r#"
-            [{}]
-            k = ""
-            gxi = {{ version = "0.0.1" }}
-        "#, DEPENDENCIES_STR).as_bytes());
-        assert_eq!(cargo_toml.toml.to_string(), format!("[{dep}]\nk = \"\"\n\n[{dep}.gxi]\nversion = \"0.0.1\"\n", dep = DEPENDENCIES_STR))
+        let test_str = format!("[{dep}]\nk = \"\"\n\n[{dep}.gxi]\nversion = \"0.0.1\"\n", dep = DEPENDENCIES_STR);
+
+        //with dependency
+        {
+            let cargo_toml = parse_cargo_toml(format!(r#"
+                [{}]
+                k = ""
+                gxi = "0.0.1"
+            "#, DEPENDENCIES_STR).as_bytes());
+            assert_eq!(cargo_toml.toml.to_string(), test_str);
+        }
+        {
+            let cargo_toml = parse_cargo_toml(format!(r#"
+                [{}]
+                k = ""
+                gxi = {{ version = "0.0.1" }}
+            "#, DEPENDENCIES_STR).as_bytes());
+            assert_eq!(cargo_toml.toml.to_string(), test_str);
+        }
     }
     {
         let cargo_toml = parse_cargo_toml(format!(r#"
