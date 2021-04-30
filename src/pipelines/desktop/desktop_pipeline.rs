@@ -1,7 +1,7 @@
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
-use crate::cli::{DesktopArgs, CliInterface};
+use crate::cli::{CliInterface};
 use crate::utils::CargoToml;
 
 pub const DESKTOP_FEATURE: &str = "desktop";
@@ -13,9 +13,11 @@ pub fn desktop_pipeline(args: CliInterface, cargo_toml: &mut CargoToml) {
 }
 
 fn run(base_dir: &Path) {
-    let out = Command::new("cargo")
+    Command::new("cargo")
         .args(&["run"])
         .current_dir(&base_dir)
-        .output()
-        .expect("failed to execute process");
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("failed to run cargo. Make sure cargo is installed and is available in path");
 }

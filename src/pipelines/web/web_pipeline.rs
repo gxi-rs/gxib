@@ -1,4 +1,4 @@
-use crate::cli::{WebArgs, CliInterface};
+use crate::cli::{CliInterface};
 use crate::utils::CargoToml;
 
 pub const WEB_FEATURE: &str = "web";
