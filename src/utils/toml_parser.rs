@@ -47,6 +47,7 @@ pub fn parse_cargo_toml(bytes: &[u8]) -> CargoToml {
         {
             // check version
             gxi_table.entry(VERSION_STR).or_insert_with(|| Value::String(String::new()));
+            gxi_table.
         }
     }
     CargoToml(cargo_toml)
