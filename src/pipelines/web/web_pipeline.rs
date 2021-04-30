@@ -1,6 +1,6 @@
 use crate::cli::WebArgs;
 
-/// The web pipeline
+/// web pipeline using wasm
 pub fn web_pipeline(args: WebArgs) {
     println!("building web");
     if args.serve {

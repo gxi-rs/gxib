@@ -1,1 +1,5 @@
-pub mod web;
+pub use desktop::*;
+pub use web::*;
+
+mod web;
+mod desktop;

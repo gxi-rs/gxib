@@ -1,8 +1,8 @@
 use clap::Clap;
 
-use crate::cli::CliInterface;
-use crate::cli::SubCommands::Web;
-use crate::pipelines::web::web_pipeline::web_pipeline;
+use crate::cli::{CliInterface, SubCommands::{*}};
+use crate::pipelines::desktop_pipeline;
+use crate::pipelines::web_pipeline;
 
 mod cli;
 mod pipelines;
@@ -10,6 +10,7 @@ mod pipelines;
 fn main() {
     let cli_interface: CliInterface = CliInterface::parse();
     match cli_interface.subcmds {
-        Web(web_cmd) => web_pipeline(web_cmd)
+        Web(web_cmd) => web_pipeline(web_cmd),
+        Desktop(desktop_args) => desktop_pipeline(desktop_args)
     }
 }

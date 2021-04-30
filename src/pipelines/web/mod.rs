@@ -1,1 +1,3 @@
-pub mod web_pipeline;
+pub use web_pipeline::*;
+
+mod web_pipeline;

@@ -1,5 +1,6 @@
-use clap::{AppSettings, Clap, Subcommand};
+use clap::{AppSettings, Clap};
 
+use crate::cli::desktop_args::DesktopArgs;
 use crate::cli::WebArgs;
 
 #[derive(Clap)]
@@ -13,4 +14,5 @@ pub struct CliInterface {
 #[derive(Clap)]
 pub enum SubCommands {
     Web(WebArgs),
+    Desktop(DesktopArgs),
 }
