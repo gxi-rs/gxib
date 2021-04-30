@@ -6,7 +6,7 @@ use clap::Clap;
 use crate::cli::{CliInterface, SubCommands::*};
 use crate::pipelines::desktop_pipeline;
 use crate::pipelines::web_pipeline;
-use crate::utils::parse_cargo_toml;
+use crate::utils::{CargoToml};
 
 mod cli;
 mod pipelines;
@@ -19,7 +19,7 @@ fn main() {
     let cargo_toml_path = &format!("{}/Cargo.toml", cli_interface.dir)[..];
     let cargo_toml_path = Path::new(cargo_toml_path);
     // parse Cargo.toml
-    let mut cargo_toml = { parse_cargo_toml(&read(&cargo_toml_path).unwrap()) };
+    let mut cargo_toml = { CargoToml::parse_cargo_toml(&read(&cargo_toml_path).unwrap()) };
     // match sub commands
     match cli_interface.subcmds {
         Web(web_cmd) => web_pipeline(web_cmd, &mut cargo_toml),
