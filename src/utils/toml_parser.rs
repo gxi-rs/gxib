@@ -89,9 +89,8 @@ fn test_parse_cargo_toml() {
         }
         {
             let cargo_toml = parse_cargo_toml(format!(r#"
-                [{}.gxi]
-                version = "0.0.1"
-                hello = [ "foo" ]
+                [{}]
+                gxi = {{ version = "0.0.1", hello = [ "foo" ] }}
             "#, DEPENDENCIES_STR).as_bytes());
             assert_eq!(cargo_toml.toml.to_string(), test_str);
         }
