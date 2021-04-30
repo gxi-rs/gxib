@@ -80,44 +80,4 @@ fn test_parse_cargo_toml() {
         "#, DEPENDENCIES_STR).as_bytes());
         assert_eq!(cargo_toml.toml.to_string(), format!("[{dep}.gxi]\nversion = \"0.0.1\"\n", dep = DEPENDENCIES_STR))
     }
-    /*//no dependencies
-    {
-        let cargo_toml = parse_cargo_toml(r#"
-            [hello]
-        "#.as_bytes());
-        assert_eq!(cargo_toml.dependencies.gxi, Value::String(String::new()));
-        assert_eq!(cargo_toml.extra.to_string(), "[hello]\n");
-    }
-    //empty dependencies
-    {
-        let cargo_toml = parse_cargo_toml(r#"
-            [hello]
-
-            [dependencies]
-
-            [bar]
-        "#.as_bytes());
-        assert_eq!(cargo_toml.dependencies.gxi, Value::);
-        assert_eq!(cargo_toml.extra.to_string(), "[bar]\n\n[hello]\n");
-    }
-    //with gxi
-    {
-        let cargo_toml = parse_cargo_toml(r#"
-            [hello]
-
-            [dependencies]
-            gxi = "0.1.3"
-        "#.as_bytes());
-        assert_eq!(cargo_toml.dependencies.gxi, "0.1.3");
-        assert_eq!(cargo_toml.extra.to_string(), "[hello]\n");
-    }
-
-    //with features
-    {
-        let cargo_toml = parse_cargo_toml(r#"
-            [dependencies]
-            gxi = { version = "0.1.3" }
-        "#.as_bytes());
-        assert_eq!(cargo_toml.dependencies.gxi, "0.1.3");
-    }*/
 }
