@@ -22,8 +22,8 @@ fn main() {
     let mut cargo_toml = { CargoToml::new(&read(&cargo_toml_path).expect("Error reading Cargo.toml file")) };
     // match sub commands
     match cli_interface.subcmds {
-        Web(web_cmd) => web_pipeline(web_cmd, &mut cargo_toml),
-        Desktop(desktop_args) => desktop_pipeline(desktop_args, &mut cargo_toml),
+        Web(_) => web_pipeline(cli_interface, &mut cargo_toml),
+        _ => desktop_pipeline(cli_interface, &mut cargo_toml),
     }
     // write to Cargo.toml file
     write(&cargo_toml_path, cargo_toml.to_string()).expect("Error writing to Cargo.toml file");
