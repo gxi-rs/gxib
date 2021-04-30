@@ -1,3 +1,11 @@
+use clap::Clap;
+
+use crate::cli::CliInterface;
+
+mod cli;
+mod pipelines;
+
 fn main() {
-    println!("Hello, world!");
+    let cli_interface: CliInterface = CliInterface::parse();
+    // cli_interface.
 }
