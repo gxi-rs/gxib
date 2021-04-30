@@ -1,5 +1,5 @@
-use toml::value::Table;
 use toml::Value;
+use toml::value::Table;
 
 const DEPENDENCIES_STR: &str = "dependencies";
 const VERSION_STR: &str = "version";
@@ -56,7 +56,7 @@ pub fn parse_cargo_toml(bytes: &[u8]) -> CargoToml {
                 .or_insert_with(|| Value::String(String::new()));
             // check features
             {
-                let _features = {
+                let features = {
                     let features = gxi_table
                         .entry(FEATURES_STR)
                         .or_insert_with(|| Value::Array(Vec::new()));
@@ -64,6 +64,22 @@ pub fn parse_cargo_toml(bytes: &[u8]) -> CargoToml {
                         "Expected array of strings as the value of features of dependency gxi",
                     )
                 };
+                // remove both web and desktop feature
+                // because they'll be automatically be added by
+                // the respected pipelines
+                {
+                    let mut to_remove = Vec::new();
+                    for (i, val) in features.iter().enumerate() {
+                        let str = val.as_str().expect("Values of feature array can only have strings");
+                        if str == "desktop" || str == "web" {
+                            // features resizes when an element is removed so the index should be shifted
+                            to_remove.push(i - to_remove.len());
+                        }
+                    }
+                    for x in to_remove {
+                        features.remove(x);
+                    }
+                }
             }
         }
     }
@@ -101,7 +117,7 @@ fn test_parse_cargo_toml() {
                     "#,
                     DEPENDENCIES_STR
                 )
-                .as_bytes(),
+                    .as_bytes(),
             );
             assert_eq!(cargo_toml.to_string(), test_str);
         }
@@ -115,7 +131,7 @@ fn test_parse_cargo_toml() {
                     "#,
                     DEPENDENCIES_STR, VERSION_STR
                 )
-                .as_bytes(),
+                    .as_bytes(),
             );
             assert_eq!(cargo_toml.to_string(), test_str);
         }
@@ -129,7 +145,7 @@ fn test_parse_cargo_toml() {
                     "#,
                     DEPENDENCIES_STR
                 )
-                .as_bytes(),
+                    .as_bytes(),
             );
             assert_eq!(cargo_toml.to_string(), test_str);
         }
@@ -150,7 +166,7 @@ fn test_parse_cargo_toml() {
                     "#,
                     DEPENDENCIES_STR, VERSION_STR
                 )
-                .as_bytes(),
+                    .as_bytes(),
             );
             assert_eq!(cargo_toml.to_string(), test_str);
         }
@@ -163,9 +179,26 @@ fn test_parse_cargo_toml() {
                     "#,
                     DEPENDENCIES_STR, VERSION_STR
                 )
-                .as_bytes(),
+                    .as_bytes(),
             );
             assert_eq!(cargo_toml.to_string(), test_str);
         }
+    }
+    // features check
+    {
+        let cargo_toml = parse_cargo_toml(
+            format!(
+                r#"
+                    [{}.gxi]
+                    features = ["desktop","web","async","web","desktop"]
+                "#,
+                DEPENDENCIES_STR
+            )
+                .as_bytes(),
+        );
+        assert_eq!(cargo_toml.to_string(), format!(
+            "[{}.gxi]\n{} = [\"async\"]\n{} = \"\"\n",
+            DEPENDENCIES_STR, FEATURES_STR, VERSION_STR
+        ));
     }
 }
