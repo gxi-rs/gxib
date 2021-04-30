@@ -7,6 +7,8 @@ use crate::cli::WebArgs;
 #[clap(version = "0.1.0", author = "aniketfuryrocks <prajapati.ani306@gmail.com>")]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct CliInterface {
+    #[clap(short, long, default_value = "./")]
+    pub dir: String,
     #[clap(subcommand)]
     pub subcmds: SubCommands,
 }
