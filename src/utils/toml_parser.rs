@@ -58,7 +58,6 @@ fn test_parse_cargo_toml() {
     }
     {
         let test_str = format!("[{dep}]\nk = \"\"\n\n[{dep}.gxi]\nversion = \"0.0.1\"\n", dep = DEPENDENCIES_STR);
-
         //with dependency
         {
             let cargo_toml = parse_cargo_toml(format!(r#"
@@ -77,11 +76,25 @@ fn test_parse_cargo_toml() {
             assert_eq!(cargo_toml.toml.to_string(), test_str);
         }
     }
+    // check extra props
     {
-        let cargo_toml = parse_cargo_toml(format!(r#"
-            [{}.gxi]
-            version = "0.0.1"
-        "#, DEPENDENCIES_STR).as_bytes());
-        assert_eq!(cargo_toml.toml.to_string(), format!("[{dep}.gxi]\nversion = \"0.0.1\"\n", dep = DEPENDENCIES_STR))
+        let test_str = format!("[{dep}.gxi]\nversion = \"0.0.1\"\nhello = [\"foo\"]\n", dep = DEPENDENCIES_STR);
+        {
+            let cargo_toml = parse_cargo_toml(format!(r#"
+                [{}.gxi]
+                version = "0.0.1"
+                hello = [ "foo" ]
+            "#, DEPENDENCIES_STR).as_bytes());
+            assert_eq!(cargo_toml.toml.to_string(), test_str);
+        }
+        {
+            let cargo_toml = parse_cargo_toml(format!(r#"
+                [{}.gxi]
+                version = "0.0.1"
+                hello = [ "foo" ]
+            "#, DEPENDENCIES_STR).as_bytes());
+            assert_eq!(cargo_toml.toml.to_string(), test_str);
+        }
     }
+
 }
