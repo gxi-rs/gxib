@@ -4,8 +4,12 @@ use toml::value::Table;
 const DEPENDENCIES_STR: &str = "dependencies";
 const VERSION_STR: &str = "version";
 
-pub struct CargoToml {
-    toml: Value,
+pub struct CargoToml(Value);
+
+impl ToString for CargoToml {
+    fn to_string(&self) -> String {
+        self.0.to_string()
+    }
 }
 
 pub fn parse_cargo_toml(bytes: &[u8]) -> CargoToml {
@@ -44,9 +48,7 @@ pub fn parse_cargo_toml(bytes: &[u8]) -> CargoToml {
             gxi_table.entry(VERSION_STR).or_insert_with(|| Value::String(String::new()));
         }
     }
-    CargoToml {
-        toml: cargo_toml
-    }
+    CargoToml(cargo_toml)
 }
 
 #[test]
@@ -54,7 +56,7 @@ fn test_parse_cargo_toml() {
     //no dependency
     {
         let cargo_toml = parse_cargo_toml("".as_bytes());
-        assert_eq!(cargo_toml.toml.to_string(), format!("[{}.gxi]\n{} = \"\"\n", DEPENDENCIES_STR, VERSION_STR))
+        assert_eq!(cargo_toml.to_string(), format!("[{}.gxi]\n{} = \"\"\n", DEPENDENCIES_STR, VERSION_STR))
     }
     {
         let test_str = format!("[{dep}]\nk = \"\"\n\n[{dep}.gxi]\n{ver} = \"0.0.1\"\n", dep = DEPENDENCIES_STR, ver = VERSION_STR);
@@ -65,7 +67,7 @@ fn test_parse_cargo_toml() {
                 k = ""
                 gxi = "0.0.1"
             "#, DEPENDENCIES_STR).as_bytes());
-            assert_eq!(cargo_toml.toml.to_string(), test_str);
+            assert_eq!(cargo_toml.to_string(), test_str);
         }
         {
             let cargo_toml = parse_cargo_toml(format!(r#"
@@ -73,7 +75,7 @@ fn test_parse_cargo_toml() {
                 k = ""
                 gxi = {{ {} = "0.0.1" }}
             "#, DEPENDENCIES_STR, VERSION_STR).as_bytes());
-            assert_eq!(cargo_toml.toml.to_string(), test_str);
+            assert_eq!(cargo_toml.to_string(), test_str);
         }
     }
     // check extra props
@@ -85,14 +87,14 @@ fn test_parse_cargo_toml() {
                 {} = "0.0.1"
                 hello = [ "foo" ]
             "#, DEPENDENCIES_STR, VERSION_STR).as_bytes());
-            assert_eq!(cargo_toml.toml.to_string(), test_str);
+            assert_eq!(cargo_toml.to_string(), test_str);
         }
         {
             let cargo_toml = parse_cargo_toml(format!(r#"
                 [{}]
                 gxi = {{ {} = "0.0.1", hello = [ "foo" ] }}
             "#, DEPENDENCIES_STR, VERSION_STR).as_bytes());
-            assert_eq!(cargo_toml.toml.to_string(), test_str);
+            assert_eq!(cargo_toml.to_string(), test_str);
         }
     }
 }
