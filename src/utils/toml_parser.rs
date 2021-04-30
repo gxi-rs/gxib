@@ -13,12 +13,6 @@ impl ToString for CargoToml {
     }
 }
 
-impl CargoToml {
-    pub fn to_formatted_string(&self) -> String {
-        toml::to_string_pretty(&self.0).unwrap()
-    }
-}
-
 pub fn parse_cargo_toml(bytes: &[u8]) -> CargoToml {
     let mut cargo_toml: Value = toml::from_slice(bytes).unwrap();
     {

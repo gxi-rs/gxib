@@ -27,5 +27,5 @@ fn main() {
         Desktop(desktop_args) => desktop_pipeline(desktop_args),
     }
     // write to Cargo.toml file
-    write(&cargo_toml_path, toml_parse.to_formatted_string());
+    write(&cargo_toml_path, toml_parse.to_string());
 }
