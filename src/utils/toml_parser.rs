@@ -42,19 +42,19 @@ pub fn parse_cargo_toml(bytes: &[u8]) -> CargoToml {
             } else {
                 gxi_table
             };
-            gxi_table.as_table_mut().expect("Expected table as {} or string as \"\" for the value of gxi")
+            gxi_table.as_table_mut().expect("Expected table as {} or string as \"\" for the value of dependency gxi")
         };
         //check props
         {
             // check version
             gxi_table.entry(VERSION_STR).or_insert_with(|| Value::String(String::new()));
             // check features
-            /*{
-                let features = gxi_table.entry(FEATURES_STR).or_insert_with(|| Value::Array(Vec::new()));
-                if !features.is_array() {
-                    panic!("")
-                }
-            }*/
+            {
+                let _features = {
+                    let features = gxi_table.entry(FEATURES_STR).or_insert_with(|| Value::Array(Vec::new()));
+                    features.as_array_mut().expect("Expected array of strings as the value of features of dependency gxi")
+                };
+            }
         }
     }
     CargoToml(cargo_toml)
@@ -65,10 +65,11 @@ fn test_parse_cargo_toml() {
     //no dependency
     {
         let cargo_toml = parse_cargo_toml("".as_bytes());
-        assert_eq!(cargo_toml.to_string(), format!("[{}.gxi]\n{} = \"\"\n", DEPENDENCIES_STR, VERSION_STR))
+        assert_eq!(cargo_toml.to_string(), format!("[{}.gxi]\n{} = \"\"\n{} = []\n", DEPENDENCIES_STR, VERSION_STR, FEATURES_STR))
     }
     {
-        let test_str = format!("[{dep}]\nk = \"\"\n\n[{dep}.gxi]\n{ver} = \"\"\n", dep = DEPENDENCIES_STR, ver = VERSION_STR);
+        let test_str = format!("[{dep}]\nk = \"\"\n\n[{dep}.gxi]\n{ver} = \"\"\n{fea} = []\n",
+                               dep = DEPENDENCIES_STR, ver = VERSION_STR, fea = FEATURES_STR);
         //with dependency
         {
             let cargo_toml = parse_cargo_toml(format!(r#"
@@ -97,7 +98,7 @@ fn test_parse_cargo_toml() {
     }
     // check extra props
     {
-        let test_str = format!("[{}.gxi]\n{} = \"0.0.1\"\nhello = [\"foo\"]\n", DEPENDENCIES_STR, VERSION_STR);
+        let test_str = format!("[{}.gxi]\n{} = \"0.0.1\"\nhello = [\"foo\"]\n{} = []\n", DEPENDENCIES_STR, VERSION_STR, FEATURES_STR);
         {
             let cargo_toml = parse_cargo_toml(format!(r#"
                 [{}.gxi]
