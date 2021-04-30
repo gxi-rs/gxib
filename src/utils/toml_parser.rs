@@ -1,5 +1,6 @@
-use toml::value::Table;
 use toml::Value;
+use toml::value::Table;
+use crate::pipelines::{DESKTOP_FEATURE, WEB_FEATURE};
 
 const DEPENDENCIES_STR: &str = "dependencies";
 const VERSION_STR: &str = "version";
@@ -14,6 +15,17 @@ impl ToString for CargoToml {
 }
 
 impl CargoToml {
+
+    pub fn add_features(&mut self, features_to_add: Vec<String>) {
+        let cargo_table = self.0.as_table_mut().unwrap();
+        let deps = cargo_table.get_mut(DEPENDENCIES_STR).unwrap();
+        let features = deps.get_mut(FEATURES_STR).unwrap();
+        let features_array = features.as_array_mut().unwrap();
+        for x in features_to_add {
+            features_array.push(Value::String(x));
+        }
+    }
+
     pub fn new(bytes: &[u8]) -> Self {
         let mut cargo_toml: Value = toml::from_slice(bytes).unwrap();
         {
@@ -74,7 +86,7 @@ impl CargoToml {
                             let str = val
                                 .as_str()
                                 .expect("Values of feature array can only have strings");
-                            if str == "desktop" || str == "web" {
+                            if str == DESKTOP_FEATURE || str == WEB_FEATURE {
                                 // features resizes when an element is removed so the index should be shifted
                                 to_remove.push(i - to_remove.len());
                             }
@@ -122,7 +134,7 @@ fn test_parse_cargo_toml() {
                     "#,
                     DEPENDENCIES_STR
                 )
-                .as_bytes(),
+                    .as_bytes(),
             );
             assert_eq!(cargo_toml.to_string(), test_str);
         }
@@ -136,7 +148,7 @@ fn test_parse_cargo_toml() {
                     "#,
                     DEPENDENCIES_STR, VERSION_STR
                 )
-                .as_bytes(),
+                    .as_bytes(),
             );
             assert_eq!(cargo_toml.to_string(), test_str);
         }
@@ -150,7 +162,7 @@ fn test_parse_cargo_toml() {
                     "#,
                     DEPENDENCIES_STR
                 )
-                .as_bytes(),
+                    .as_bytes(),
             );
             assert_eq!(cargo_toml.to_string(), test_str);
         }
@@ -171,7 +183,7 @@ fn test_parse_cargo_toml() {
                     "#,
                     DEPENDENCIES_STR, VERSION_STR
                 )
-                .as_bytes(),
+                    .as_bytes(),
             );
             assert_eq!(cargo_toml.to_string(), test_str);
         }
@@ -184,7 +196,7 @@ fn test_parse_cargo_toml() {
                     "#,
                     DEPENDENCIES_STR, VERSION_STR
                 )
-                .as_bytes(),
+                    .as_bytes(),
             );
             assert_eq!(cargo_toml.to_string(), test_str);
         }
@@ -199,7 +211,7 @@ fn test_parse_cargo_toml() {
                 "#,
                 DEPENDENCIES_STR
             )
-            .as_bytes(),
+                .as_bytes(),
         );
         assert_eq!(
             cargo_toml.to_string(),
