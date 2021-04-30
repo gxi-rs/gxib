@@ -4,5 +4,5 @@ use clap::Clap;
 #[derive(Clap)]
 pub struct WebArgs {
     #[clap(short, long)]
-    pub serve: bool
+    pub serve: bool,
 }

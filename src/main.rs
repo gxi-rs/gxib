@@ -3,7 +3,7 @@ use std::path::Path;
 
 use clap::Clap;
 
-use crate::cli::{CliInterface, SubCommands::{*}};
+use crate::cli::{CliInterface, SubCommands::*};
 use crate::pipelines::desktop_pipeline;
 use crate::pipelines::web_pipeline;
 use crate::utils::parse_cargo_toml;
@@ -22,7 +22,7 @@ fn main() {
     };
     match cli_interface.subcmds {
         Web(web_cmd) => web_pipeline(web_cmd),
-        Desktop(desktop_args) => desktop_pipeline(desktop_args)
+        Desktop(desktop_args) => desktop_pipeline(desktop_args),
     }
- //   println!("{}", toml::to_string_pretty(&toml_parse).unwrap());
+    //   println!("{}", toml::to_string_pretty(&toml_parse).unwrap());
 }
