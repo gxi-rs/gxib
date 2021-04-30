@@ -45,6 +45,7 @@ pub fn parse_cargo_toml(bytes: &[u8]) -> CargoToml {
         };
         //check props
         {
+            // check version
             gxi_table.entry(VERSION_STR).or_insert_with(|| Value::String(String::new()));
         }
     }
@@ -59,13 +60,13 @@ fn test_parse_cargo_toml() {
         assert_eq!(cargo_toml.to_string(), format!("[{}.gxi]\n{} = \"\"\n", DEPENDENCIES_STR, VERSION_STR))
     }
     {
-        let test_str = format!("[{dep}]\nk = \"\"\n\n[{dep}.gxi]\n{ver} = \"0.0.1\"\n", dep = DEPENDENCIES_STR, ver = VERSION_STR);
+        let test_str = format!("[{dep}]\nk = \"\"\n\n[{dep}.gxi]\n{ver} = \"\"\n", dep = DEPENDENCIES_STR, ver = VERSION_STR);
         //with dependency
         {
             let cargo_toml = parse_cargo_toml(format!(r#"
                 [{}]
                 k = ""
-                gxi = "0.0.1"
+                gxi = ""
             "#, DEPENDENCIES_STR).as_bytes());
             assert_eq!(cargo_toml.to_string(), test_str);
         }
@@ -73,8 +74,16 @@ fn test_parse_cargo_toml() {
             let cargo_toml = parse_cargo_toml(format!(r#"
                 [{}]
                 k = ""
-                gxi = {{ {} = "0.0.1" }}
+                gxi = {{ {} = "" }}
             "#, DEPENDENCIES_STR, VERSION_STR).as_bytes());
+            assert_eq!(cargo_toml.to_string(), test_str);
+        }
+        {
+            let cargo_toml = parse_cargo_toml(format!(r#"
+                [{}]
+                k = ""
+                gxi = {{}}
+            "#, DEPENDENCIES_STR).as_bytes());
             assert_eq!(cargo_toml.to_string(), test_str);
         }
     }
