@@ -3,6 +3,7 @@ use toml::value::Table;
 
 const DEPENDENCIES_STR: &str = "dependencies";
 const VERSION_STR: &str = "version";
+const FEATURES_STR: &str = "features";
 
 pub struct CargoToml(Value);
 
@@ -41,13 +42,19 @@ pub fn parse_cargo_toml(bytes: &[u8]) -> CargoToml {
             } else {
                 gxi_table
             };
-            gxi_table.as_table_mut().unwrap()
+            gxi_table.as_table_mut().expect("Expected table as {} or string as \"\" for the value of gxi")
         };
         //check props
         {
             // check version
             gxi_table.entry(VERSION_STR).or_insert_with(|| Value::String(String::new()));
-            gxi_table.
+            // check features
+            /*{
+                let features = gxi_table.entry(FEATURES_STR).or_insert_with(|| Value::Array(Vec::new()));
+                if !features.is_array() {
+                    panic!("")
+                }
+            }*/
         }
     }
     CargoToml(cargo_toml)
