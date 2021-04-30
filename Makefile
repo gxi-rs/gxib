@@ -1,7 +1,7 @@
 run := cargo run --
 
-test_web:
+web:
 	$(run) -d tests/web web
 
-test_desktop:
+desktop:
 	$(run) -d tests/desktop desktop
