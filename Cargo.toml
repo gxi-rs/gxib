@@ -1,0 +1,19 @@
+[package]
+name = "gxib"
+version = "0.1.0"
+authors = ["aniketfuryrocks <prajapati.ani306@gmail.com>"]
+edition = "2018"
+description = "build tool for the gxi-rs project"
+repository = "https://github.com/gxi-rs/gxib.git"
+license = "MIT"
+keywords = [
+    "gxi-rs",
+    "build-tool"
+]
+categories = [
+    "command-line-utilities",
+    "development-tools::build-utils",
+    "web-programming"
+]
+
+[dependencies]
