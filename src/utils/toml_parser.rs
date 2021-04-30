@@ -14,7 +14,7 @@ impl ToString for CargoToml {
 }
 
 impl CargoToml {
-    pub fn parse_cargo_toml(bytes: &[u8]) -> Self {
+    pub fn new(bytes: &[u8]) -> Self {
         let mut cargo_toml: Value = toml::from_slice(bytes).unwrap();
         {
             let cargo_toml = cargo_toml.as_table_mut().unwrap();

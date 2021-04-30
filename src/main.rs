@@ -19,7 +19,7 @@ fn main() {
     let cargo_toml_path = &format!("{}/Cargo.toml", cli_interface.dir)[..];
     let cargo_toml_path = Path::new(cargo_toml_path);
     // parse Cargo.toml
-    let mut cargo_toml = { CargoToml::parse_cargo_toml(&read(&cargo_toml_path).unwrap()) };
+    let mut cargo_toml = { CargoToml::new(&read(&cargo_toml_path).unwrap()) };
     // match sub commands
     match cli_interface.subcmds {
         Web(web_cmd) => web_pipeline(web_cmd, &mut cargo_toml),
