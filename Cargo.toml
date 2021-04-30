@@ -17,7 +17,5 @@ categories = [
 ]
 
 [dependencies]
-serde = "1.0.125"
-serde_derive = "1.0.125"
 clap = "3.0.0-beta.2"
-toml = "0.5.8"
+toml = { version = "0.5.8", features = ["preserve_order"] }

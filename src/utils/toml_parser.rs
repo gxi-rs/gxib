@@ -1,41 +1,123 @@
-use std::borrow::BorrowMut;
-use std::collections::{HashMap, BTreeMap};
-use std::fs::read;
-use std::path::Path;
-
-use serde_derive::{Deserialize, Serialize};
 use toml::Value;
+use toml::value::Table;
 
-/// Default version for the gxi crate
-const DEFAULT_GXI_VER: &str = "*";
+const DEPENDENCIES_STR: &str = "dependencies";
+const VERSION_STR: &str = "version";
 
-#[derive(Debug, Deserialize, Serialize)]
 pub struct CargoToml {
-    #[serde(default)]
-    dependencies: CargoTomlDeps,
-    #[serde(flatten)]
-    extra: Value
+    toml: Value,
 }
 
-/// \[dependencies\] section of Cargo.toml file
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CargoTomlDeps {
-    #[serde(default)]
-    gxi: String,
-}
-
-impl Default for CargoTomlDeps {
-    fn default() -> Self {
-        CargoTomlDeps {
-            gxi: String::from(DEFAULT_GXI_VER)
+pub fn parse_cargo_toml(bytes: &[u8]) -> CargoToml {
+    let mut cargo_toml: Value = toml::from_slice(bytes).unwrap();
+    {
+        let cargo_toml = cargo_toml.as_table_mut().unwrap();
+        // get the [dependency] part
+        let dependency_table = {
+            let dependency_table = cargo_toml
+                .entry(DEPENDENCIES_STR)
+                .or_insert_with(|| Value::Table(Table::new()));
+            dependency_table.as_table_mut().unwrap()
+        };
+        // get the gxi dependency
+        let gxi_table = {
+            let gxi_table = dependency_table
+                .entry("gxi")
+                .or_insert_with(|| Value::Table(Table::new()));
+            // check if the value is a string
+            let gxi_table = if let Some(str) = gxi_table.as_str() {
+                // if it is a string then convert it to a table
+                // and move that string to as its version
+                dependency_table["gxi"] = Value::Table({
+                    let mut table = Table::new();
+                    table.entry(VERSION_STR).or_insert(Value::String(String::from(str)));
+                    table
+                });
+                &mut dependency_table["gxi"]
+            } else {
+                gxi_table
+            };
+            gxi_table.as_table_mut().unwrap()
+        };
+        //check props
+        {
+            gxi_table.entry("version").or_insert_with(|| Value::String(String::new()));
         }
+    }
+    CargoToml {
+        toml: cargo_toml
     }
 }
 
-pub fn parse_cargo_toml(path: &Path) -> CargoToml {
-    let mut cargo_toml: CargoToml = toml::from_slice(
-        &read(path).unwrap()
-    ).unwrap();
+#[test]
+fn test_parse_cargo_toml() {
+    //no dependency
+    {
+        let cargo_toml = parse_cargo_toml("".as_bytes());
+        assert_eq!(cargo_toml.toml.to_string(), format!("[{}.gxi]\nversion = \"\"\n", DEPENDENCIES_STR))
+    }
+    //with dependency
+    {
+        let cargo_toml = parse_cargo_toml(format!(r#"
+            [{}]
+            k = ""
+            gxi = "0.0.1"
+        "#, DEPENDENCIES_STR).as_bytes());
+        assert_eq!(cargo_toml.toml.to_string(), format!("[{dep}]\nk = \"\"\n\n[{dep}.gxi]\nversion = \"0.0.1\"\n", dep = DEPENDENCIES_STR))
+    }
+    {
+        let cargo_toml = parse_cargo_toml(format!(r#"
+            [{}]
+            k = ""
+            gxi = {{ version = "0.0.1" }}
+        "#, DEPENDENCIES_STR).as_bytes());
+        assert_eq!(cargo_toml.toml.to_string(), format!("[{dep}]\nk = \"\"\n\n[{dep}.gxi]\nversion = \"0.0.1\"\n", dep = DEPENDENCIES_STR))
+    }
+    {
+        let cargo_toml = parse_cargo_toml(format!(r#"
+            [{}.gxi]
+            version = "0.0.1"
+        "#, DEPENDENCIES_STR).as_bytes());
+        assert_eq!(cargo_toml.toml.to_string(), format!("[{dep}.gxi]\nversion = \"0.0.1\"\n", dep = DEPENDENCIES_STR))
+    }
+    /*//no dependencies
+    {
+        let cargo_toml = parse_cargo_toml(r#"
+            [hello]
+        "#.as_bytes());
+        assert_eq!(cargo_toml.dependencies.gxi, Value::String(String::new()));
+        assert_eq!(cargo_toml.extra.to_string(), "[hello]\n");
+    }
+    //empty dependencies
+    {
+        let cargo_toml = parse_cargo_toml(r#"
+            [hello]
 
-    cargo_toml
+            [dependencies]
+
+            [bar]
+        "#.as_bytes());
+        assert_eq!(cargo_toml.dependencies.gxi, Value::);
+        assert_eq!(cargo_toml.extra.to_string(), "[bar]\n\n[hello]\n");
+    }
+    //with gxi
+    {
+        let cargo_toml = parse_cargo_toml(r#"
+            [hello]
+
+            [dependencies]
+            gxi = "0.1.3"
+        "#.as_bytes());
+        assert_eq!(cargo_toml.dependencies.gxi, "0.1.3");
+        assert_eq!(cargo_toml.extra.to_string(), "[hello]\n");
+    }
+
+    //with features
+    {
+        let cargo_toml = parse_cargo_toml(r#"
+            [dependencies]
+            gxi = { version = "0.1.3" }
+        "#.as_bytes());
+        assert_eq!(cargo_toml.dependencies.gxi, "0.1.3");
+    }*/
 }
