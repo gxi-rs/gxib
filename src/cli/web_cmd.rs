@@ -1,6 +1,6 @@
 use clap::Clap;
 
-/// web wasm platform
+/// build for the web platform
 #[derive(Clap)]
 pub struct WebCmd {
 }
