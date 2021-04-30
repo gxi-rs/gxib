@@ -9,7 +9,13 @@ pub struct CargoToml(Value);
 
 impl ToString for CargoToml {
     fn to_string(&self) -> String {
-        self.0.to_string()
+        toml::to_string(&self.0).unwrap()
+    }
+}
+
+impl CargoToml {
+    pub fn to_formatted_string(&self) -> String {
+        toml::to_string_pretty(&self.0).unwrap()
     }
 }
 
