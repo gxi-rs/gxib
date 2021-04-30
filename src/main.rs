@@ -19,9 +19,7 @@ fn main() {
     let cargo_toml_path = &format!("{}/Cargo.toml", cli_interface.dir)[..];
     let cargo_toml_path = Path::new(cargo_toml_path);
 
-    let toml_parse = {
-        parse_cargo_toml(&read(&cargo_toml_path).unwrap())
-    };
+    let toml_parse = { parse_cargo_toml(&read(&cargo_toml_path).unwrap()) };
     match cli_interface.subcmds {
         Web(web_cmd) => web_pipeline(web_cmd),
         Desktop(desktop_args) => desktop_pipeline(desktop_args),
