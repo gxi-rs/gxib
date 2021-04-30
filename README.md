@@ -1,11 +1,39 @@
 # Gxib
+
 *build tool for the gxi-rs project*
 
+## Install
+
+```bash
+cargo install gxib
+```
+
 ## Usage
-*Will be updated*
+
+Run in project root dir.
+
+*Build for desktop*
+
+```bash
+gxib desktop
+```
+
+*Build for web*
+
+```bash
+gxib web
+```
+
+## Other Args
+
+Run help to list other commands and args
+
+```bash
+gxib help
+```
 
 ## Roadmap
 
-* Basic wasm builds
-* Basic desktop gtk builds
-* wasm web hot reload
+* [X] Basic desktop gtk builds
+* [ ] Basic wasm builds
+* [ ] wasm web hot reload
