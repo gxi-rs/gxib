@@ -12,7 +12,11 @@ pub struct DesktopPipeline<'a> {
 
 impl DesktopPipeline<'_> {
     pub async fn run(&mut self) -> Result<()> {
-        self.cargo_toml.add_features(vec![DESKTOP_FEATURE.to_string()]);
+        // write desktop feature
+        {
+            self.cargo_toml.add_features(vec![DESKTOP_FEATURE.to_string()]);
+            self.cargo_toml.write_to_file().await?;
+        }
         exec_cmd("cargo", &["run"], Some(&self.args.dir)).await?;
         Ok(())
     }

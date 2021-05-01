@@ -37,7 +37,5 @@ async fn main() -> Result<()> {
             }.run().await.with_context(|| "Error running desktop pipeline")?
         }
     };
-    // write to Cargo.toml file
-    cargo_toml.write_to_file().await?;
     Ok(())
 }

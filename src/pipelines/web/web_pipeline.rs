@@ -12,7 +12,11 @@ pub struct WebPipeline<'a> {
 
 impl WebPipeline<'_> {
     pub async fn run(&mut self) -> Result<()> {
-        self.cargo_toml.add_features(vec![WEB_FEATURE.to_string()]);
+        // write web feature
+        {
+            self.cargo_toml.add_features(vec![WEB_FEATURE.to_string()]);
+            self.cargo_toml.write_to_file().await?;
+        }
         let web_args = self.args.subcmd.as_web()?;
 
         if web_args.serve {
