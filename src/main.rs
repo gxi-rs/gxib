@@ -1,30 +1,34 @@
-use std::fs::{read, write};
 use std::path::Path;
 
+pub use anyhow::{*};
 use clap::Clap;
+use tokio::fs::{read, write};
 
-use crate::cli::{CliInterface, SubCommands::*};
-use crate::pipelines::desktop_pipeline;
-use crate::pipelines::web_pipeline;
-use crate::utils::CargoToml;
+pub use crate::cli::*;
+pub use crate::pipelines::*;
+pub use crate::utils::*;
 
 mod cli;
 mod pipelines;
 mod utils;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     // get the command line arguments
     let cli_interface: CliInterface = CliInterface::parse();
     // parse cargo.toml
     let cargo_toml_path = &format!("{}/Cargo.toml", cli_interface.dir)[..];
     let cargo_toml_path = Path::new(cargo_toml_path);
     // parse Cargo.toml
-    let mut cargo_toml = { CargoToml::new(&read(&cargo_toml_path).expect("Error reading Cargo.toml file")) };
+    let mut cargo_toml = { CargoToml::new(&read(&cargo_toml_path).await.expect("Error reading Cargo.toml file")) };
     // match sub commands
     match cli_interface.subcmds {
-        Web(_) => web_pipeline(cli_interface, &mut cargo_toml),
-        _ => desktop_pipeline(cli_interface, &mut cargo_toml),
-    }
+        SubCommands::Web(_) => web_pipeline(cli_interface, &mut cargo_toml)
+            .await.expect("Error running web pipeline"),
+        _ => desktop_pipeline(cli_interface, &mut cargo_toml)
+            .await.expect("Error running desktop pipeline"),
+    };
     // write to Cargo.toml file
-    write(&cargo_toml_path, cargo_toml.to_string()).expect("Error writing to Cargo.toml file");
+    write(&cargo_toml_path, cargo_toml.to_string())
+        .await.expect("Error writing to Cargo.toml file");
 }

@@ -1,7 +1,7 @@
 run := cargo run --
 
 web:
-	$(run) -d ../gxi/examples/web web
+	$(run) -d ./examples/web web
 
 desktop:
-	$(run) -d ../gxi/examples/desktop desktop
+	$(run) -d ./examples/desktop desktop
