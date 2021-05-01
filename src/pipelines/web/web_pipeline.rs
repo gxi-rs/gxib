@@ -46,6 +46,7 @@ impl WebPipeline<'_> {
             "cargo",
             &args,
             Some(&self.args.dir),
+            None,
         ).await.with_context(|| format!("error building for web"))?;
         Ok(())
     }

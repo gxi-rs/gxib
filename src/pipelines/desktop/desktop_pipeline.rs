@@ -1,6 +1,6 @@
-use crate::cli::Args;
-use crate::utils::{exec_cmd, CargoToml};
 use crate::*;
+use crate::cli::Args;
+use crate::utils::{CargoToml, exec_cmd};
 
 pub const DESKTOP_FEATURE: &str = "desktop";
 
@@ -18,7 +18,7 @@ impl DesktopPipeline<'_> {
                 .add_features(vec![DESKTOP_FEATURE.to_string()]);
             self.cargo_toml.write_to_file().await?;
         }
-        exec_cmd("cargo", &["run"], Some(&self.args.dir)).await?;
+        exec_cmd("cargo", &["run"], Some(&self.args.dir), None).await?;
         Ok(())
     }
 }

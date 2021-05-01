@@ -26,13 +26,6 @@ gxib desktop
 ### Web
 *Dev Environment Requirements*
 
-* [NodeJs](https://nodejs.org/en/)
-* [Yarn](https://yarnpkg.com/getting-started/install) 
-* [Webpack Cli](https://webpack.js.org/api/cli/)
-  (Make sure the output of `yarn global bin` is in path)
-  ```bash
-  yarn global add webpack-cli
-  ```
 * install `wasm32-unknown-unknown` architecture
   ```bash
   rustup target add wasm32-unknown-unknown
@@ -55,7 +48,7 @@ gxib web
 ## Other Args
 
 Run help to list other commands and args
-R
+
 ```bash
 gxib help
 ```
