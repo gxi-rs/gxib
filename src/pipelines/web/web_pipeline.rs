@@ -3,6 +3,7 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use crate::*;
 
 pub const WEB_FEATURE: &str = "web";
+pub const WEB_TARGET: &str = "wasm32-unknown-unknown";
 
 /// web pipeline using wasm
 pub struct WebPipeline<'a> {
@@ -12,25 +13,47 @@ pub struct WebPipeline<'a> {
 
 impl WebPipeline<'_> {
     pub async fn run(&mut self) -> Result<()> {
+        println!("building web");
         // write web feature
         {
             self.cargo_toml.add_features(vec![WEB_FEATURE.to_string()]);
             self.cargo_toml.write_to_file().await?;
         }
-        let web_args = self.args.subcmd.as_web()?;
+        // check args
+        {
+            let web_args = self.args.subcmd.as_web()?;
+            let build_future = self.build();
+            if web_args.serve {
+                //join both instead of spawning a new thread
+                {
+                    let (build, watch) = tokio::join!(build_future, self.watch());
+                    build?;
+                    watch?;
+                }
+            } else {
+                build_future.await?;
+            }
+        }
+        Ok(())
+    }
 
-        if web_args.serve {
-            let mut watcher: RecommendedWatcher = Watcher::new_immediate(|res| match res {
-                Ok(event) => println!("event: {:?}", event),
-                Err(e) => println!("watch error: {:?}", e),
-            })
+    pub async fn build(&self) -> Result<()> {
+        exec_cmd("cargo", &["build", "--target", WEB_TARGET], Some(&self.args.dir))
+            .await
+            .with_context(|| format!("error building for web"))?;
+        Ok(())
+    }
+
+    pub async fn watch(&self) -> Result<()> {
+        let mut watcher: RecommendedWatcher = Watcher::new_immediate(|res| match res {
+            Ok(event) => println!("event: {:?}", event),
+            Err(e) => println!("watch error: {:?}", e),
+        })
             .with_context(|| "Error initialising watcher")?;
 
-            watcher
-                .watch(format!("{}/src", self.args.dir), RecursiveMode::Recursive)
-                .with_context(|| format!("error watching {}/src", self.args.dir))?;
-        }
-        println!("building web");
+        watcher
+            .watch(format!("{}/src", self.args.dir), RecursiveMode::Recursive)
+            .with_context(|| format!("error watching {}/src", self.args.dir))?;
         Ok(())
     }
 }
