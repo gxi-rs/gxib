@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
             .with_context(|| "Error reading Cargo.toml file")?,
     ).with_context(|| "Error parsing Cargo.toml file")?;
     // match sub commands
-    match cli_interface.subcmds {
+    match cli_interface.subcmd {
         SubCommands::Web(_) => web_pipeline(cli_interface, &mut cargo_toml)
             .await
             .with_context(|| "Error running web pipeline")?,
