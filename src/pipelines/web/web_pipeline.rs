@@ -7,11 +7,28 @@ pub const WEB_TARGET: &str = "wasm32-unknown-unknown";
 
 /// web pipeline using wasm
 pub struct WebPipeline<'a> {
-    pub args: &'a Args,
+    pub args: &'a mut Args,
     pub cargo_toml: &'a mut CargoToml,
 }
 
 impl WebPipeline<'_> {
+    /// init args
+    pub fn init(&mut self) -> Result<&mut Self> {
+        let web_args = self.args.subcmd.as_web_mut()?;
+        // canonicalize target dir
+        web_args.target_dir = Path::new(&web_args.target_dir)
+            .canonicalize()
+            .with_context(|| format!("error getting absolute path for --target-dir {}", web_args.target_dir))?
+            .to_str().unwrap().to_string();
+        // canonicalize output dir
+        web_args.output_dir = Path::new(&web_args.output_dir)
+            .canonicalize()
+            .with_context(|| format!("error getting absolute path for --output-dir {}", web_args.output_dir))?
+            .to_str().unwrap().to_string();
+        Ok(self)
+    }
+
+    /// runs commands according to args
     pub async fn run(&mut self) -> Result<()> {
         println!("building web");
         // write web feature
@@ -39,6 +56,7 @@ impl WebPipeline<'_> {
         Ok(())
     }
 
+    /// run cargo build
     pub async fn build(&self) -> Result<()> {
         let web_subcmd = self.args.subcmd.as_web()?;
         let mut args = vec![
@@ -80,15 +98,15 @@ impl WebPipeline<'_> {
                 "web",
                 // no type script
                 "--no-typescript",
-                // where to place the assets TODO: --out-dir parameter
+                // dir to place the assets at
                 "--out-dir",
-                ".gxi",
+                &web_subcmd.output_dir,
             ],
             Option::<&str>::None,
             None,
         )
-        .await
-        .with_context(|| format!("error running cargo-bindgen on "))?;
+            .await
+            .with_context(|| format!("error running cargo-bindgen on "))?;
         Ok(())
     }
 
@@ -97,7 +115,7 @@ impl WebPipeline<'_> {
             Ok(event) => println!("event: {:?}", event),
             Err(e) => println!("watch error: {:?}", e),
         })
-        .with_context(|| "Error initialising watcher")?;
+            .with_context(|| "Error initialising watcher")?;
 
         watcher
             .watch(format!("{}/src", self.args.dir), RecursiveMode::Recursive)

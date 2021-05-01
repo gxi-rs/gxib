@@ -15,6 +15,9 @@ pub struct WebArgs {
     #[clap(long)]
     pub release: bool,
     /// target dir for cargo builds.
-    #[clap(long = "target-dir", default_value = "./target")]
+    #[clap(long = "target-dir", default_value = "target")]
     pub target_dir: String,
+    /// output dir for cargo builds.
+    #[clap(long = "output-dir",short, default_value = ".gxi")]
+    pub output_dir: String,
 }

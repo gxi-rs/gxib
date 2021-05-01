@@ -17,27 +17,28 @@ pub const CARGO_TOML: &str = "Cargo.toml";
 #[tokio::main]
 async fn main() -> Result<()> {
     // get the command line arguments
-    let args: Args = Args::parse();
+    let mut args: Args = Args::parse();
     // parse Cargo.toml
     let mut cargo_toml = CargoToml::from_file(Path::new(&args.dir).join(CARGO_TOML)).await?;
     // match sub commands
     match args.subcmd {
         //web
         SubCommands::Web(_) => WebPipeline {
-            args: &args,
+            args: &mut args,
             cargo_toml: &mut cargo_toml,
         }
-        .run()
-        .await
-        .with_context(|| "Error running web pipeline")?,
+            .init()?
+            .run()
+            .await
+            .with_context(|| "Error running web pipeline")?,
         //desktop
         _ => DesktopPipeline {
             args: &args,
             cargo_toml: &mut cargo_toml,
         }
-        .run()
-        .await
-        .with_context(|| "Error running desktop pipeline")?,
+            .run()
+            .await
+            .with_context(|| "Error running desktop pipeline")?,
     };
     Ok(())
 }
