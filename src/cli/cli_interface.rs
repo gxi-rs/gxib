@@ -22,13 +22,13 @@ pub enum SubCommands {
 }
 
 impl SubCommands {
-    pub fn as_web_mut(&mut self) -> Result<&mut WebArgs> {
+    pub fn as_web(&self) -> Result<&WebArgs> {
         match self {
             SubCommands::Web(arg) => Ok(arg),
             _ => bail!("Expected subcommand to be web")
         }
     }
-    pub fn as_desktop_mut(&mut self) -> Result<&mut DesktopArgs> {
+    pub fn as_desktop(&self) -> Result<&DesktopArgs> {
         match self {
             SubCommands::Desktop(arg) => Ok(arg),
             _ => bail!("Expected subcommand to be web")
