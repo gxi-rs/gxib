@@ -5,4 +5,6 @@ use clap::Clap;
 pub struct WebArgs {
     #[clap(short, long)]
     pub serve: bool,
+    #[clap(long)]
+    pub release: bool,
 }

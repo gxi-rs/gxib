@@ -38,13 +38,15 @@ impl WebPipeline<'_> {
     }
 
     pub async fn build(&self) -> Result<()> {
+        let mut args = vec!["build", "--target", WEB_TARGET];
+        if self.args.subcmd.as_web()?.release {
+            args.push("--release")
+        }
         exec_cmd(
             "cargo",
-            &["build", "--target", WEB_TARGET],
+            &args,
             Some(&self.args.dir),
-        )
-        .await
-        .with_context(|| format!("error building for web"))?;
+        ).await.with_context(|| format!("error building for web"))?;
         Ok(())
     }
 
@@ -53,7 +55,7 @@ impl WebPipeline<'_> {
             Ok(event) => println!("event: {:?}", event),
             Err(e) => println!("watch error: {:?}", e),
         })
-        .with_context(|| "Error initialising watcher")?;
+            .with_context(|| "Error initialising watcher")?;
 
         watcher
             .watch(format!("{}/src", self.args.dir), RecursiveMode::Recursive)
