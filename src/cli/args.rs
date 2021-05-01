@@ -5,9 +5,9 @@ use crate::*;
 #[derive(Clap)]
 #[clap(
     version = "0.1.0",
-    author = "aniketfuryrocks <prajapati.ani306@gmail.com>"
+    author = "aniketfuryrocks <prajapati.ani306@gmail.com>",
+    setting = AppSettings::ColoredHelp
 )]
-#[clap(setting = AppSettings::ColoredHelp)]
 pub struct Args {
     #[clap(short, long, default_value = "./")]
     pub dir: String,
