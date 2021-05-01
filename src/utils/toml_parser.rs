@@ -1,5 +1,7 @@
-use toml::Value;
+use std::path::PathBuf;
+
 use toml::value::Table;
+use toml::Value;
 
 use crate::*;
 
@@ -7,17 +9,37 @@ const DEPENDENCIES_STR: &str = "dependencies";
 const VERSION_STR: &str = "version";
 const FEATURES_STR: &str = "features";
 
-pub struct CargoToml(Value);
+pub struct CargoToml {
+    path: PathBuf,
+    value: Value,
+}
 
 impl ToString for CargoToml {
     fn to_string(&self) -> String {
-        toml::to_string(&self.0).unwrap()
+        toml::to_string(&self.value).unwrap()
     }
 }
 
 impl CargoToml {
+    pub async fn write_to_file(&self) -> Result<()> {
+        Ok(write(self.path.as_path(), self.to_string())
+            .await
+            .with_context(|| format!("Error while writing to {:?}", self.path))?)
+    }
+
+    pub async fn from_file(path: PathBuf) -> Result<Self> {
+        Ok(Self {
+            value: Self::serialise(
+                &read(path.as_path())
+                    .await
+                    .with_context(|| "Error reading Cargo.toml file")?,
+            )?,
+            path,
+        })
+    }
+    /// add features to gxi dependency
     pub fn add_features(&mut self, features_to_add: Vec<String>) {
-        let cargo_table = self.0.as_table_mut().unwrap();
+        let cargo_table = self.value.as_table_mut().unwrap();
         let deps_table = {
             let deps = cargo_table.get_mut(DEPENDENCIES_STR).unwrap();
             deps.as_table_mut().unwrap()
@@ -35,7 +57,8 @@ impl CargoToml {
         }
     }
 
-    pub fn new(bytes: &[u8]) -> Result<Self> {
+    /// serialise the byte array to correct Toml Structure
+    pub fn serialise(bytes: &[u8]) -> Result<Value> {
         let mut cargo_toml: Value = toml::from_slice(bytes)?;
         {
             let cargo_toml = cargo_toml.as_table_mut().unwrap();
@@ -44,8 +67,9 @@ impl CargoToml {
                 let dependency_table = cargo_toml
                     .entry(DEPENDENCIES_STR)
                     .or_insert_with(|| Value::Table(Table::new()));
-                dependency_table.as_table_mut()
-                    .with_context(|| format!("[{dep}] must be a table. [{dep}]", dep = DEPENDENCIES_STR))?
+                dependency_table.as_table_mut().with_context(|| {
+                    format!("[{dep}] must be a table. [{dep}]", dep = DEPENDENCIES_STR)
+                })?
             };
             // get the gxi dependency
             let gxi_table = {
@@ -67,8 +91,9 @@ impl CargoToml {
                 } else {
                     gxi_table
                 };
-                gxi_table.as_table_mut()
-                    .with_context(|| "Expected table as {} or string as \"\" for the value of dependency gxi")?
+                gxi_table.as_table_mut().with_context(|| {
+                    "Expected table as {} or string as \"\" for the value of dependency gxi"
+                })?
             };
             //check props
             {
@@ -82,8 +107,9 @@ impl CargoToml {
                         let features = gxi_table
                             .entry(FEATURES_STR)
                             .or_insert_with(|| Value::Array(Vec::new()));
-                        features.as_array_mut()
-                            .with_context(|| "Expected array of strings as the value of features of dependency gxi")?
+                        features.as_array_mut().with_context(|| {
+                            "Expected array of strings as the value of features of dependency gxi"
+                        })?
                     };
                     // remove both web and desktop feature
                     // because they'll be automatically be added by
@@ -106,13 +132,13 @@ impl CargoToml {
                 }
             }
         }
-        Ok(CargoToml(cargo_toml))
+        Ok(cargo_toml)
     }
 }
 
 #[test]
 fn test_parse_cargo_toml() -> Result<()> {
-    //no dependency
+    /* //no dependency
     {
         let cargo_toml = CargoToml::new("".as_bytes())?;
         assert_eq!(
@@ -227,6 +253,6 @@ fn test_parse_cargo_toml() -> Result<()> {
                 DEPENDENCIES_STR, FEATURES_STR, VERSION_STR
             )
         );
-    }
+    }*/
     Ok(())
 }

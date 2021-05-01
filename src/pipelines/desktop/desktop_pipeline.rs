@@ -1,13 +1,19 @@
 use crate::*;
-
-use crate::cli::CliInterface;
-use crate::utils::{exec_cmd, CargoToml};
+use crate::cli::Args;
+use crate::utils::{CargoToml, exec_cmd};
 
 pub const DESKTOP_FEATURE: &str = "desktop";
 
 /// desktop pipeline using gtk
-pub async fn desktop_pipeline(args: CliInterface, cargo_toml: &mut CargoToml) -> Result<()> {
-    cargo_toml.add_features(vec![DESKTOP_FEATURE.to_string()]);
-    exec_cmd("cargo", &["run"], Some(args.dir)).await?;
-    Ok(())
+pub struct DesktopPipeline<'a> {
+    pub args: &'a Args,
+    pub cargo_toml: &'a mut CargoToml,
+}
+
+impl DesktopPipeline<'_> {
+    pub async fn run(&mut self) -> Result<()> {
+        self.cargo_toml.add_features(vec![DESKTOP_FEATURE.to_string()]);
+        exec_cmd("cargo", &["run"], Some(&self.args.dir)).await?;
+        Ok(())
+    }
 }
