@@ -101,6 +101,9 @@ impl WebPipeline<'_> {
                 // dir to place the assets at
                 "--out-dir",
                 &web_subcmd.output_dir,
+                // name of output file
+                "--out-name",
+                &get_file_hash(&wasm_file).await?[..]
             ],
             Option::<&str>::None,
             None,
