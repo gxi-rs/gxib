@@ -1,3 +1,9 @@
+pub use gxi::*;
+
+pub use crate::app::*;
+
+mod app;
+
 fn main() {
-    println!("Hello, asdasdasdasdasd!");
+    run::<App>();
 }

@@ -103,7 +103,7 @@ impl WebPipeline<'_> {
                 &web_subcmd.output_dir,
                 // name of output file
                 "--out-name",
-                &get_file_hash(&wasm_file).await?[..]
+                &format!("index-{}", get_file_hash(&wasm_file).await?)
             ],
             Option::<&str>::None,
             None,
