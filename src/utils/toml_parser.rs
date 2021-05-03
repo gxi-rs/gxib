@@ -30,13 +30,14 @@ impl CargoToml {
     }
 
     pub async fn from_file(path: PathBuf) -> Result<Self> {
+        let value = Self::serialise(
+            &read(path.as_path())
+                .await
+                .with_context(|| "Error reading Cargo.toml file")?,
+        )?;
         Ok(Self {
-            package_name: "".to_string(),
-            value: Self::serialise(
-                &read(path.as_path())
-                    .await
-                    .with_context(|| "Error reading Cargo.toml file")?,
-            )?,
+            package_name: value[PACKAGE_STR]["name"].to_string(),
+            value,
             path,
         })
     }
