@@ -44,18 +44,7 @@ impl CargoToml {
     /// add features to gxi dependency
     pub fn add_features(&mut self, features_to_add: Vec<String>) {
         let cargo_table = self.value.as_table_mut().unwrap();
-        let deps_table = {
-            let deps = cargo_table.get_mut(DEPENDENCIES_STR).unwrap();
-            deps.as_table_mut().unwrap()
-        };
-        let gxi_table = {
-            let gxi_table = deps_table.get_mut("gxi").unwrap();
-            gxi_table.as_table_mut().unwrap()
-        };
-        let features_array = {
-            let features = gxi_table.get_mut(FEATURES_STR).unwrap();
-            features.as_array_mut().unwrap()
-        };
+        let features_array = cargo_table[DEPENDENCIES_STR]["gxi"][FEATURES_STR].as_array_mut().unwrap();
         for x in features_to_add {
             features_array.push(Value::String(x));
         }
