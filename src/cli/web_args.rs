@@ -18,6 +18,6 @@ pub struct WebArgs {
     #[clap(long = "target-dir", default_value = "target")]
     pub target_dir: String,
     /// output dir for cargo builds.
-    #[clap(long = "output-dir",short, default_value = ".gxi")]
+    #[clap(long = "output-dir",short, default_value = "target/.gxi")]
     pub output_dir: String,
 }
