@@ -138,9 +138,10 @@ impl CargoToml {
 
 #[test]
 fn test_parse_cargo_toml() -> Result<()> {
-    /* //no dependency
+    use crate::CargoToml;
+     //no dependency
     {
-        let cargo_toml = CargoToml::new("".as_bytes())?;
+        let cargo_toml = CargoToml::serialise("".as_bytes())?;
         assert_eq!(
             cargo_toml.to_string(),
             format!(
@@ -158,7 +159,7 @@ fn test_parse_cargo_toml() -> Result<()> {
         );
         //with dependency
         {
-            let cargo_toml = CargoToml::new(
+            let cargo_toml = CargoToml::serialise(
                 format!(
                     r#"
                         [{}]
@@ -172,7 +173,7 @@ fn test_parse_cargo_toml() -> Result<()> {
             assert_eq!(cargo_toml.to_string(), test_str);
         }
         {
-            let cargo_toml = CargoToml::new(
+            let cargo_toml = CargoToml::serialise(
                 format!(
                     r#"
                         [{}]
@@ -186,7 +187,7 @@ fn test_parse_cargo_toml() -> Result<()> {
             assert_eq!(cargo_toml.to_string(), test_str);
         }
         {
-            let cargo_toml = CargoToml::new(
+            let cargo_toml = CargoToml::serialise(
                 format!(
                     r#"
                         [{}]
@@ -207,7 +208,7 @@ fn test_parse_cargo_toml() -> Result<()> {
             DEPENDENCIES_STR, VERSION_STR, FEATURES_STR
         );
         {
-            let cargo_toml = CargoToml::new(
+            let cargo_toml = CargoToml::serialise(
                 format!(
                     r#"
                         [{}.gxi]
@@ -221,7 +222,7 @@ fn test_parse_cargo_toml() -> Result<()> {
             assert_eq!(cargo_toml.to_string(), test_str);
         }
         {
-            let cargo_toml = CargoToml::new(
+            let cargo_toml = CargoToml::serialise(
                 format!(
                     r#"
                         [{}]
@@ -236,7 +237,7 @@ fn test_parse_cargo_toml() -> Result<()> {
     }
     // features check
     {
-        let cargo_toml = CargoToml::new(
+        let cargo_toml = CargoToml::serialise(
             format!(
                 r#"
                     [{}.gxi]
@@ -253,6 +254,6 @@ fn test_parse_cargo_toml() -> Result<()> {
                 DEPENDENCIES_STR, FEATURES_STR, VERSION_STR
             )
         );
-    }*/
+    }
     Ok(())
 }
