@@ -7,10 +7,12 @@ use tokio::fs::{read, write};
 pub use crate::cli::*;
 pub use crate::pipelines::*;
 pub use crate::utils::*;
+pub use crate::version::*;
 
 mod cli;
 mod pipelines;
 mod utils;
+mod version;
 
 pub const CARGO_TOML: &str = "Cargo.toml";
 
@@ -33,9 +35,9 @@ async fn main() -> Result<()> {
             args: &args,
             cargo_toml: &mut cargo_toml,
         }
-            .run()
-            .await
-            .with_context(|| "Error running desktop pipeline")?,
+        .run()
+        .await
+        .with_context(|| "Error running desktop pipeline")?,
     };
     Ok(())
 }

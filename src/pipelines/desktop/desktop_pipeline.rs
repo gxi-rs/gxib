@@ -1,6 +1,6 @@
-use crate::*;
 use crate::cli::Args;
-use crate::utils::{CargoToml, exec_cmd};
+use crate::utils::{exec_cmd, CargoToml};
+use crate::*;
 
 pub const DESKTOP_FEATURE: &str = "desktop";
 

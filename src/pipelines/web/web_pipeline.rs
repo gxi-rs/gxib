@@ -190,7 +190,8 @@ impl<'a> WebPipeline<'a> {
 
     /// generates html
     pub fn generate_html(&self) -> String {
-        format!(r#"<!DOCTYPE html>
+        format!(
+            r#"<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
