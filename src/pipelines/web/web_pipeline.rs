@@ -71,7 +71,7 @@ impl<'a> WebPipeline<'a> {
 
     pub async fn optimise_build(&self) -> Result<()> {
         let web_subcmd = self.args.subcmd.as_web()?;
-        let file_name = format!("{}_bg.wasm", &self.wasm_hashed_name);
+        let file_name = format!("{}.wasm", &self.wasm_hashed_name);
         exec_cmd(
             "wasm-opt",
             &["-Oz", &file_name, "-o", &file_name],
@@ -139,7 +139,7 @@ impl<'a> WebPipeline<'a> {
                 &web_subcmd.output_dir,
                 // name of output file
                 "--out-name",
-                self.wasm_hashed_name.as_str()
+                &format!("{}.wasm",self.wasm_hashed_name.as_str())
             ],
             Option::<&str>::None,
             None,
@@ -169,12 +169,12 @@ impl<'a> WebPipeline<'a> {
             <html>
               <head>
                 <meta charset="utf-8">
-                <link rel="preload" href="/{name}_bg.wasm" as="fetch" type="application/wasm">
+                <link rel="preload" href="/{name}.wasm" as="fetch" type="application/wasm">
                 <link rel="modulepreload" href="/{name}.js">
               </head>
               <body>
                 <script type="module">
-                  import init from '/{name}.js'; init('/{name}_bg.wasm');
+                  import init from '/{name}.js'; init('/{name}.wasm');
                 </script>
               </body>
             </html>
