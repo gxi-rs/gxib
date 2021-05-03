@@ -23,11 +23,8 @@ async fn main() -> Result<()> {
     // match sub commands
     match args.subcmd {
         //web
-        SubCommands::Web(_) => WebPipeline {
-            args: &mut args,
-            cargo_toml: &mut cargo_toml,
-        }
-            .init()?
+        SubCommands::Web(_) => WebPipeline::new(&mut args, &mut cargo_toml)
+            .await?
             .run()
             .await
             .with_context(|| "Error running web pipeline")?,
