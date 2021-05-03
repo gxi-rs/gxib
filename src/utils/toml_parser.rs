@@ -11,9 +11,9 @@ const FEATURES_STR: &str = "features";
 const PACKAGE_STR: &str = "package";
 
 pub struct CargoToml {
-    package_name: String,
-    path: PathBuf,
-    value: Value,
+    pub package_name: String,
+    pub path: PathBuf,
+    pub value: Value,
 }
 
 impl ToString for CargoToml {
@@ -36,7 +36,7 @@ impl CargoToml {
                 .with_context(|| "Error reading Cargo.toml file")?,
         )?;
         Ok(Self {
-            package_name: value[PACKAGE_STR]["name"].to_string(),
+            package_name: value[PACKAGE_STR]["name"].as_str().unwrap().to_string(),
             value,
             path,
         })
