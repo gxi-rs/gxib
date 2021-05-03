@@ -74,7 +74,7 @@ impl<'a> WebPipeline<'a> {
         let file_name = format!("{}.wasm", &self.wasm_hashed_name);
         exec_cmd(
             "wasm-opt",
-            &["-Oz", &file_name, "-o", &file_name],
+            &["-Oz", "--dce", &file_name, "-o", &file_name],
             Some(&web_subcmd.output_dir),
             None,
         ).await?;
@@ -139,7 +139,7 @@ impl<'a> WebPipeline<'a> {
                 &web_subcmd.output_dir,
                 // name of output file
                 "--out-name",
-                &format!("{}.wasm",self.wasm_hashed_name.as_str())
+                &format!("{}.wasm", self.wasm_hashed_name.as_str())
             ],
             Option::<&str>::None,
             None,
