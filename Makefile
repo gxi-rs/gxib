@@ -5,3 +5,6 @@ web:
 
 desktop:
 	$(run) -d ./examples/desktop desktop
+
+release:
+	 cargo release
