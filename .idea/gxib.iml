@@ -9,6 +9,19 @@
       <sourceFolder url="file://$MODULE_DIR$/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/desktop/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/web/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/anyhow-cfc36c5f1fe26f46/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/bitflags-634666590931cfe0/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/crossbeam-utils-2f06c39181e9b5b1/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/indexmap-19f105361df0b9b1/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/libc-a2f1a13f99df6923/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/log-fe070becbfe5bf39/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/memchr-c9b363a2e2a9dcc4/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/proc-macro-error-93efd308d90b670d/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/proc-macro-error-attr-762577fa4487aabf/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/proc-macro2-cdaea910a8fe9bfb/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/serde-97439d9733bf4302/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/syn-7739aa28997c945f/out" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/target/debug/build/tokio-1a5475bfeabe9245/out" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/tests/desktop/target" />
       <excludeFolder url="file://$MODULE_DIR$/tests/web/target" />
