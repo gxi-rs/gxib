@@ -1,5 +1,0 @@
-make --dry-run --always-make --keep-going --print-directory
-make: Entering directory '/Projects/gxi-rs/gxib'
-cargo run -- -d ./examples/web web --release
-make: Leaving directory '/Projects/gxi-rs/gxib'
- 
