@@ -56,6 +56,6 @@ gxib help
 ## Roadmap
 
 * [X] Basic desktop gtk builds
-* [ ] Basic wasm builds
+* [X] Basic wasm builds
 * [ ] Desktop hot reload
 * [ ] Web and Desktop hot refresh without losing state
