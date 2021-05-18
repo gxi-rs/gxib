@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use path_absolutize::Absolutize;
 
 use crate::*;
@@ -71,19 +70,21 @@ impl<'a> WebPipeline<'a> {
         // check args
         {
             let web_args = self.args.subcmd.as_web()?;
-            if web_args.serve {
-                self.watch().await?;
-            }
+            // need not build again because it has already been done in new block
             // run wasm bindgen
             self.build_bindings().await?;
+            // optimise binfings if release using binaryen
             if web_args.release {
                 self.optimise_build().await?;
             }
+            // write html
             write(
                 Path::new(&web_args.output_dir).join("index.html"),
                 self.generate_html(),
-            )
-                .await?;
+            ).await?;
+            if web_args.serve {
+                watch(self.args.dir.clone()).await;
+            }
         }
         Ok(())
     }
@@ -175,19 +176,6 @@ impl<'a> WebPipeline<'a> {
         )
             .await
             .with_context(|| format!("error running cargo-bindgen on "))?;
-        Ok(())
-    }
-
-    pub async fn watch(&self) -> Result<()> {
-        let mut watcher: RecommendedWatcher = Watcher::new_immediate(|res| match res {
-            Ok(event) => println!("event: {:?}", event),
-            Err(e) => println!("watch error: {:?}", e),
-        })
-            .with_context(|| "Error initialising watcher")?;
-
-        watcher
-            .watch(format!("{}/src", self.args.dir), RecursiveMode::Recursive)
-            .with_context(|| format!("error watching {}/src", self.args.dir))?;
         Ok(())
     }
 

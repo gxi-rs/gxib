@@ -6,27 +6,28 @@ edition = "2018"
 description = "build tool for the gxi-rs project"
 repository = "https://github.com/gxi-rs/gxib.git"
 license = "MIT"
-keywords = [
-    "gxi-rs",
-    "build-tool"
-]
-categories = [
-    "command-line-utilities",
-    "development-tools::build-utils",
-    "web-programming"
-]
+keywords = ["gxi-rs", "build-tool"]
+categories = ["command-line-utilities", "development-tools::build-utils", "web-programming"]
 
 [workspace]
-members = [
-    "examples/web",
-    "examples/desktop"
-]
+members = ["examples/web", "examples/desktop"]
 
 [dependencies]
 clap = "3.0.0-beta.2"
-toml = { version = "0.5.8", features = ["preserve_order"] }
 notify = "5.0.0-pre.7"
-tokio = { version = "1.5.0", features = ["full", "process"] }
 anyhow = "1.0.40"
 seahash = "4.1.0"
 path-absolutize = "3.0.10"
+futures = ""
+
+[dependencies.toml]
+version = "0.5.8"
+features = ["preserve_order"]
+
+[dependencies.tokio]
+version = "1.5.0"
+features = ["full", "process"]
+
+[dependencies.gxi]
+version = ""
+features = ["web"]
