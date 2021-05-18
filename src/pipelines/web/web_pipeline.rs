@@ -83,7 +83,9 @@ impl<'a> WebPipeline<'a> {
                 self.generate_html(),
             ).await?;
             if web_args.serve {
-                watch(self.args.dir.clone()).await;
+                watch(self.args.dir.clone(), |res| {
+                    println!("trigger");
+                }).await;
             }
         }
         Ok(())
