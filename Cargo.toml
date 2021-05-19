@@ -28,3 +28,5 @@ features = ["preserve_order"]
 version = "1.5.0"
 features = ["full", "process"]
 
+[dependencies.actix-web]
+version = "3"
