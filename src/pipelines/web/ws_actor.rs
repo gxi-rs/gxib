@@ -19,6 +19,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
         msg: Result<ws::Message, ws::ProtocolError>,
         ctx: &mut Self::Context,
     ) {
+        println!("WS: {:?}", msg);
         match msg {
             Ok(ws::Message::Ping(msg)) => ctx.pong(&msg),
             Ok(ws::Message::Text(text)) => ctx.text(text),
@@ -37,7 +38,8 @@ async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, E
 pub fn start_web_server() -> impl Future<Output = Result<Result<()>,task::JoinError>> {
     tokio::task::spawn(async {
         actix_web::rt::System::new("web server").block_on(async {
-            HttpServer::new(|| App::new().route("/__gxib__", web::get().to(index)))
+            HttpServer::new(|| App::new().route("/__gxi__", web::get().to(index)))
+                // TODO: custom address
                 .bind("127.0.0.1:8080")?
                 .run()
                 .await
