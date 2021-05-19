@@ -1,10 +1,10 @@
+use crate::*;
+use futures::future::Future;
 use notify::{event, RecommendedWatcher, RecursiveMode, Watcher};
+use path_absolutize::Absolutize;
 use std::path::PathBuf;
 use std::sync::mpsc;
-use futures::future;
-use path_absolutize::Absolutize;
-
-use crate::*;
+use tokio::task;
 
 pub const WEB_FEATURE: &str = "web";
 pub const WEB_TARGET: &str = "wasm32-unknown-unknown";
@@ -77,16 +77,20 @@ impl WebPipeline {
             this.build_full().await?;
             // check if serve
             if web_args.serve {
-                Self::watch(this)
-                    .await
-                    .with_context(|| "Error while watching local file changes")??;
+                let watcher = Self::watch(this);
+                let server = start_web_server();
+
+                let (watcher_result, server_result) = tokio::join!(watcher, server);
+                println!("waiting");
+                watcher_result.with_context(|| "Error while watching local file changes")??;
+                server_result.with_context(|| "Error while launching server")??;
             }
         }
         Ok(())
     }
 
-    pub fn watch(this: Self) -> impl future::Future<Output=Result<Result<()>,tokio::task::JoinError>> {
-        tokio::task::spawn(async move {
+    pub fn watch(this: Self) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
+        task::spawn(async move {
             let (tx, rx) = mpsc::channel();
 
             let mut watcher: RecommendedWatcher =
@@ -117,12 +121,9 @@ impl WebPipeline {
                 }
             }
 
-            Err::<(),anyhow::Error>(anyhow!("Watch exited unexpectidly"))
+            Err::<(), anyhow::Error>(anyhow!("Watch exited unexpectidly"))
         })
     }
-
-    ///
-    async fn serve(this: Self) {}
 
     /// builds bindings
     /// optimises build if release
