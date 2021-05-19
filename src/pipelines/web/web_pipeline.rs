@@ -1,7 +1,7 @@
 use notify::{event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::PathBuf;
 use std::sync::mpsc;
-
+use futures::future;
 use path_absolutize::Absolutize;
 
 use crate::*;
@@ -77,45 +77,52 @@ impl WebPipeline {
             this.build_full().await?;
             // check if serve
             if web_args.serve {
-                tokio::task::spawn(async move {
-                    let (tx, rx) = mpsc::channel();
-
-                    let mut watcher: RecommendedWatcher =
-                        Watcher::new_immediate(move |res| tx.send(res).unwrap())
-                            .with_context(|| "Error initialising watcher")?;
-
-                    watcher
-                        .watch(format!("{}/src", &this.args.dir), RecursiveMode::Recursive)
-                        .with_context(|| format!("error watching {}/src", &this.args.dir))?;
-
-                    // listen to watch events
-                    for res in rx {
-                        // match file modify event
-                        match res {
-                            Ok(event) => {
-                                if let event::EventKind::Modify(modify_event) = &event.kind {
-                                    if let event::ModifyKind::Data(_) = modify_event {
-                                        // on file modification run cargo build
-                                        match this.build().await {
-                                            Err(err) => eprintln!("Error while building\n{}", err),
-                                            // build full only when cargo build is successfull
-                                            _ => this.build_full().await?,
-                                        }
-                                    }
-                                }
-                            }
-                            Err(e) => eprintln!("Error while watching dir\n{}", e),
-                        }
-                    }
-
-                    Err::<(), anyhow::Error>(anyhow!("Watch exited unexpectidly"))
-                })
-                .await
-                .with_context(|| "Error while watching local file changes")??;
+                Self::watch(this)
+                    .await
+                    .with_context(|| "Error while watching local file changes")??;
             }
         }
         Ok(())
     }
+
+    pub fn watch(this: Self) -> impl future::Future<Output=Result<Result<()>,tokio::task::JoinError>> {
+        tokio::task::spawn(async move {
+            let (tx, rx) = mpsc::channel();
+
+            let mut watcher: RecommendedWatcher =
+                Watcher::new_immediate(move |res| tx.send(res).unwrap())
+                    .with_context(|| "Error initialising watcher")?;
+
+            watcher
+                .watch(format!("{}/src", &this.args.dir), RecursiveMode::Recursive)
+                .with_context(|| format!("error watching {}/src", &this.args.dir))?;
+
+            // listen to watch events
+            for res in rx {
+                // match file modify event
+                match res {
+                    Ok(event) => {
+                        if let event::EventKind::Modify(modify_event) = &event.kind {
+                            if let event::ModifyKind::Data(_) = modify_event {
+                                // on file modification run cargo build
+                                match this.build().await {
+                                    Err(err) => eprintln!("Error while building\n{}", err),
+                                    // build full only when cargo build is successfull
+                                    _ => this.build_full().await?,
+                                }
+                            }
+                        }
+                    }
+                    Err(e) => eprintln!("Error while watching dir\n{}", e),
+                }
+            }
+
+            Err::<(),anyhow::Error>(anyhow!("Watch exited unexpectidly"))
+        })
+    }
+
+    ///
+    async fn serve(this: Self) {}
 
     /// builds bindings
     /// optimises build if release
