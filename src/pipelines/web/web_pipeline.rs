@@ -248,6 +248,15 @@ impl WebPipeline {
   </head>
   <body>
     <script type="module">
+        (function () {{
+            const socket = new WebSocket('ws://localhost:8080/__gxi__');
+            socket.addEventListener('open', function (event) {{
+                console.log("connected");
+            }});
+            socket.addEventListener('message', function (event) {{
+                console.log('Message from server ', event.data);
+            }});
+        }})()
       import init from '/{name}.js'; init('/{name}.wasm');
     </script>
   </body>
