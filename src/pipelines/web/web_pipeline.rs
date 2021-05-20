@@ -98,27 +98,24 @@ impl WebPipeline {
         task::spawn(async move {
             // watcher
 
-            let mut rx = {
-                let (tx, rx) = watch::channel(());
+            let (tx, mut rx) = watch::channel(());
 
-                let mut watcher: RecommendedWatcher =
-                    Watcher::new_immediate(move |res: notify::Result<event::Event>| match res {
-                        Ok(event) => {
-                            if let event::EventKind::Modify(modify_event) = &event.kind {
-                                if let event::ModifyKind::Data(_) = modify_event {
-                                    tx.send(()).unwrap();
-                                }
+            let mut watcher: RecommendedWatcher =
+                Watcher::new_immediate(move |res: notify::Result<event::Event>| match res {
+                    Ok(event) => {
+                        if let event::EventKind::Modify(modify_event) = &event.kind {
+                            if let event::ModifyKind::Data(_) = modify_event {
+                                tx.send(()).unwrap();
                             }
                         }
-                        Err(e) => eprintln!("Error while watching dir\n{}", e),
-                    })
-                    .with_context(|| "Error initialising watcher")?;
+                    }
+                    Err(e) => eprintln!("Error while watching dir\n{}", e),
+                })
+                .with_context(|| "Error initialising watcher")?;
 
-                watcher
-                    .watch(format!("{}/src", &this.args.dir), RecursiveMode::Recursive)
-                    .with_context(|| format!("error watching {}/src", &this.args.dir))?;
-                rx
-            };
+            watcher
+                .watch(format!("{}/src", &this.args.dir), RecursiveMode::Recursive)
+                .with_context(|| format!("error watching {}/src", &this.args.dir))?;
 
             while rx.changed().await.is_ok() {
                 match this.build().await {
@@ -126,6 +123,7 @@ impl WebPipeline {
                     // build full only when cargo build is successful
                     _ => {
                         this.build_full().await?;
+                        println!("sending");
                         build_tx.send(())?;
                     }
                 }

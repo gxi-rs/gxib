@@ -8,6 +8,7 @@ use futures::future::Future;
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
 use tokio::task;
+use actix::dev::MessageResponse;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -16,6 +17,7 @@ const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 pub struct WsActor {
     heartbeat: Instant,
+    rx: watch::Receiver<()>,
 }
 
 impl Actor for WsActor {
@@ -34,8 +36,23 @@ impl Actor for WsActor {
     }
 }
 
+struct ActorMsg;
+
+impl actix::Message for ActorMsg {
+    type Result = ();
+}
+
+impl Handler<ActorMsg> for WsActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: ActorMsg, ctx: &mut Self::Context) -> Self::Result {
+        println!("yea");
+        ctx.text("asd");
+    }
+}
 /// handler for ws::Message
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
+
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         println!("WS: {:?}", msg);
         match msg {
@@ -54,12 +71,26 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
             _ => ctx.stop(),
         }
     }
+
+    fn started(&mut self, ctx: &mut Self::Context) {
+        let mut rx = self.rx.clone();
+        let addr =  ctx.address();
+        ctx.spawn(actix::fut::wrap_future::<_, Self>(async move {
+            println!("asd");
+            while rx.changed().await.is_ok() {
+                addr.send(ActorMsg {}).await;
+            }
+        }));
+    }
+
 }
 
 async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
+    let data: &watch::Receiver<()> = req.app_data().unwrap();
     let resp = ws::start(
         WsActor {
             heartbeat: Instant::now(),
+            rx: data.clone(),
         },
         &req,
         stream,
@@ -75,7 +106,7 @@ pub fn start_web_server(
         actix_web::rt::System::new("web server").block_on(async move {
             HttpServer::new(move || {
                 App::new()
-                    .data(rx.clone())
+                    .app_data(rx.clone())
                     .route("/__gxi__", web::get().to(index))
                     .service(
                         actix_files::Files::new("/", "./target/.gxi")
