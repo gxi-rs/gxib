@@ -72,6 +72,7 @@ pub fn start_web_server() -> impl Future<Output = Result<Result<()>, task::JoinE
         actix_web::rt::System::new("web server").block_on(async {
             HttpServer::new(|| App::new().route("/__gxi__", web::get().to(index)))
                 // TODO: custom address
+                .disable_signals()
                 .bind("127.0.0.1:8080")?
                 .run()
                 .await
