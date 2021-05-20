@@ -70,19 +70,18 @@ async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, E
 pub fn start_web_server() -> impl Future<Output = Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async {
         actix_web::rt::System::new("web server").block_on(async {
-            HttpServer::new(|| 
-                App::new()
-                    .route("/__gxi__", web::get().to(index))
-                    .service(actix_files::Files::new("/", "./target/.gxi")
+            HttpServer::new(|| {
+                App::new().route("/__gxi__", web::get().to(index)).service(
+                    actix_files::Files::new("/", "./target/.gxi")
                         .prefer_utf8(true)
-                        .index_file("index.html")
-                    )
-            )
-                .disable_signals()
-                .bind("127.0.0.1:8080")?
-                .run()
-                .await
-                .with_context(|| "Error running web server")?;
+                        .index_file("index.html"),
+                )
+            })
+            .disable_signals()
+            .bind("127.0.0.1:8080")?
+            .run()
+            .await
+            .with_context(|| "Error running web server")?;
             Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectidly"))
         })?;
         Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectidly"))

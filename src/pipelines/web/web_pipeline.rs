@@ -81,7 +81,7 @@ impl WebPipeline {
                 let server = start_web_server();
 
                 let (watcher_result, server_result) = tokio::join!(watcher, server);
-                println!("waiting");
+                
                 watcher_result.with_context(|| "Error while watching local file changes")??;
                 server_result.with_context(|| "Error while launching server")??;
             }
