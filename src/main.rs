@@ -26,13 +26,12 @@ async fn main() -> Result<()> {
     match args.subcmd {
         //web
         SubCommands::Web(_) => {
-            let web_pipeline = WebPipeline::new(args, cargo_toml)
-                .await?;
+            let web_pipeline = WebPipeline::new(args, cargo_toml).await?;
             WebPipeline::run(web_pipeline)
                 .await
                 .with_context(|| "Error running web pipeline")?;
         }
-            //desktop
+        //desktop
         _ => DesktopPipeline {
             args: &args,
             cargo_toml: &mut cargo_toml,

@@ -6,8 +6,8 @@ use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
 use futures::future::Future;
 use std::time::{Duration, Instant};
-use tokio::task;
 use tokio::sync::watch;
+use tokio::task;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -34,7 +34,7 @@ impl Actor for WsActor {
     }
 }
 
-/// handeler for ws::Message
+/// handler for ws::Message
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         println!("WS: {:?}", msg);
@@ -68,7 +68,9 @@ async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, E
     resp
 }
 
-pub fn start_web_server(rx:watch::Receiver<()>) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
+pub fn start_web_server(
+    rx: watch::Receiver<()>,
+) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async move {
         actix_web::rt::System::new("web server").block_on(async move {
             HttpServer::new(move || {
@@ -79,15 +81,15 @@ pub fn start_web_server(rx:watch::Receiver<()>) -> impl Future<Output = Result<R
                         actix_files::Files::new("/", "./target/.gxi")
                             .prefer_utf8(true)
                             .index_file("index.html"),
-                )
+                    )
             })
             .disable_signals()
             .bind("127.0.0.1:8080")?
             .run()
             .await
             .with_context(|| "Error running web server")?;
-            Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectidly"))
+            Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
         })?;
-        Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectidly"))
+        Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
     })
 }

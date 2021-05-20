@@ -67,7 +67,6 @@ impl WebPipeline {
     }
 
     /// runs commands according to args
-    /// TODO: Mkae run an assoicated function which takes an Arc<Mutex
     pub async fn run(this: Self) -> Result<()> {
         println!("building web");
         // check args
@@ -124,7 +123,7 @@ impl WebPipeline {
             while rx.changed().await.is_ok() {
                 match this.build().await {
                     Err(err) => eprintln!("Error while building\n{}", err),
-                    // build full only when cargo build is successfull
+                    // build full only when cargo build is successful
                     _ => {
                         this.build_full().await?;
                         build_tx.send(())?;
@@ -132,7 +131,7 @@ impl WebPipeline {
                 }
             }
 
-            Err::<(), anyhow::Error>(anyhow!("Watch exited unexpectidly"))
+            Err::<(), anyhow::Error>(anyhow!("Watch exited unexpectedly"))
         })
     }
 
@@ -144,7 +143,7 @@ impl WebPipeline {
         // need not build again because it has already been done in new block
         // run wasm bindgen
         self.build_bindings().await?;
-        // optimise binfings if release using binaryen
+        // optimise bindings if release using binaryen
         if web_args.release {
             self.optimise_build().await?;
         }
