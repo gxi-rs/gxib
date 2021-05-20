@@ -3,7 +3,7 @@ use futures::future::Future;
 use notify::{event, RecommendedWatcher, RecursiveMode, Watcher};
 use path_absolutize::Absolutize;
 use std::path::PathBuf;
-use std::sync::mpsc;
+use tokio::sync::watch;
 use tokio::task;
 
 pub const WEB_FEATURE: &str = "web";
@@ -77,11 +77,14 @@ impl WebPipeline {
             this.build_full().await?;
             // check if serve
             if web_args.serve {
-                let watcher = Self::watch(this);
-                let server = start_web_server();
+                // channel wrote to when build is complete which is read by the server
+                let (build_tx, build_rx) = watch::channel(());
 
+                let watcher = Self::watch(this, build_tx);
+                let server = start_web_server(build_rx);
+
+                // wait for both to complete and set context for each
                 let (watcher_result, server_result) = tokio::join!(watcher, server);
-                
                 watcher_result.with_context(|| "Error while watching local file changes")??;
                 server_result.with_context(|| "Error while launching server")??;
             }
@@ -89,35 +92,43 @@ impl WebPipeline {
         Ok(())
     }
 
-    pub fn watch(this: Self) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
+    pub fn watch(
+        this: Self,
+        build_tx: watch::Sender<()>,
+    ) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
         task::spawn(async move {
-            let (tx, rx) = mpsc::channel();
+            // watcher
 
-            let mut watcher: RecommendedWatcher =
-                Watcher::new_immediate(move |res| tx.send(res).unwrap())
-                    .with_context(|| "Error initialising watcher")?;
+            let mut rx = {
+                let (tx, rx) = watch::channel(());
 
-            watcher
-                .watch(format!("{}/src", &this.args.dir), RecursiveMode::Recursive)
-                .with_context(|| format!("error watching {}/src", &this.args.dir))?;
-
-            // listen to watch events
-            for res in rx {
-                // match file modify event
-                match res {
-                    Ok(event) => {
-                        if let event::EventKind::Modify(modify_event) = &event.kind {
-                            if let event::ModifyKind::Data(_) = modify_event {
-                                // on file modification run cargo build
-                                match this.build().await {
-                                    Err(err) => eprintln!("Error while building\n{}", err),
-                                    // build full only when cargo build is successfull
-                                    _ => this.build_full().await?,
+                let mut watcher: RecommendedWatcher =
+                    Watcher::new_immediate(move |res: notify::Result<event::Event>| match res {
+                        Ok(event) => {
+                            if let event::EventKind::Modify(modify_event) = &event.kind {
+                                if let event::ModifyKind::Data(_) = modify_event {
+                                    tx.send(()).unwrap();
                                 }
                             }
                         }
+                        Err(e) => eprintln!("Error while watching dir\n{}", e),
+                    })
+                    .with_context(|| "Error initialising watcher")?;
+
+                watcher
+                    .watch(format!("{}/src", &this.args.dir), RecursiveMode::Recursive)
+                    .with_context(|| format!("error watching {}/src", &this.args.dir))?;
+                rx
+            };
+
+            while rx.changed().await.is_ok() {
+                match this.build().await {
+                    Err(err) => eprintln!("Error while building\n{}", err),
+                    // build full only when cargo build is successfull
+                    _ => {
+                        this.build_full().await?;
+                        build_tx.send(())?;
                     }
-                    Err(e) => eprintln!("Error while watching dir\n{}", e),
                 }
             }
 

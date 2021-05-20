@@ -7,6 +7,7 @@ use actix_web_actors::ws;
 use futures::future::Future;
 use std::time::{Duration, Instant};
 use tokio::task;
+use tokio::sync::watch;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -67,14 +68,17 @@ async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, E
     resp
 }
 
-pub fn start_web_server() -> impl Future<Output = Result<Result<()>, task::JoinError>> {
-    tokio::task::spawn(async {
-        actix_web::rt::System::new("web server").block_on(async {
-            HttpServer::new(|| {
-                App::new().route("/__gxi__", web::get().to(index)).service(
-                    actix_files::Files::new("/", "./target/.gxi")
-                        .prefer_utf8(true)
-                        .index_file("index.html"),
+pub fn start_web_server(rx:watch::Receiver<()>) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
+    tokio::task::spawn(async move {
+        actix_web::rt::System::new("web server").block_on(async move {
+            HttpServer::new(move || {
+                App::new()
+                    .data(rx.clone())
+                    .route("/__gxi__", web::get().to(index))
+                    .service(
+                        actix_files::Files::new("/", "./target/.gxi")
+                            .prefer_utf8(true)
+                            .index_file("index.html"),
                 )
             })
             .disable_signals()
