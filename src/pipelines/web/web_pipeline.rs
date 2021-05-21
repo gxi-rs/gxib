@@ -94,7 +94,7 @@ impl WebPipeline {
     pub fn watch(
         this: Self,
         build_tx: watch::Sender<ActorMsg>,
-    ) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
+    ) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
         task::spawn(async move {
             // watcher
 
@@ -111,7 +111,7 @@ impl WebPipeline {
                     }
                     Err(e) => eprintln!("Error while watching dir\n{}", e),
                 })
-                .with_context(|| "Error initialising watcher")?;
+                    .with_context(|| "Error initialising watcher")?;
 
             watcher
                 .watch(format!("{}/src", &this.args.dir), RecursiveMode::Recursive)
@@ -149,7 +149,7 @@ impl WebPipeline {
             Path::new(&web_args.output_dir).join("index.html"),
             self.generate_html(),
         )
-        .await?;
+            .await?;
         Ok(())
     }
 
@@ -162,7 +162,7 @@ impl WebPipeline {
             Some(&web_subcmd.output_dir),
             None,
         )
-        .await?;
+            .await?;
         Ok(())
     }
 
@@ -224,6 +224,7 @@ impl WebPipeline {
                     .to_str()
                     .unwrap(),
                 // build for web
+                "--keep-debug",
                 "--target",
                 "web",
                 // no type script
@@ -238,8 +239,8 @@ impl WebPipeline {
             Option::<&str>::None,
             None,
         )
-        .await
-        .with_context(|| format!("error running cargo-bindgen on "))?;
+            .await
+            .with_context(|| format!("error running cargo-bindgen on "))?;
         Ok(())
     }
 
@@ -255,6 +256,12 @@ impl WebPipeline {
   </head>
   <body>
     <script type="module">
+        window.set_tree_pointer = pointer => {{
+            window.tree_pointer = pointer;
+        }};
+        window.get_tree_pointer = () => {{
+            return window.tree_pointer | 0;
+        }};
         (function () {{
             const socket = new WebSocket('ws://localhost:8080/__gxi__');
             socket.addEventListener('open', function (event) {{
