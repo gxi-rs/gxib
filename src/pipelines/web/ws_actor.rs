@@ -15,7 +15,7 @@ const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// Msg sent to WS Actor
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum ActorMsg {
     FileChange
 }
@@ -49,7 +49,7 @@ impl Actor for WsActor {
             let addr = ctx.address();
             ctx.spawn(actix::fut::wrap_future::<_, Self>(async move {
                 while rx.changed().await.is_ok() {
-                    addr.send(*rx.borrow())
+                    addr.send(rx.borrow().clone())
                         .await
                         .with_context(|| "Unable to send msg to actor")
                         .unwrap();
