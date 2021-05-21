@@ -77,7 +77,7 @@ impl WebPipeline {
             // check if serve
             if web_args.serve {
                 // channel wrote to when build is complete which is read by the server
-                let (build_tx, build_rx) = watch::channel(ActorMsg::FileChange);
+                let (build_tx, build_rx) = watch::channel(ActorMsg::None);
 
                 let watcher = Self::watch(this, build_tx);
                 let server = start_web_server(build_rx);
@@ -123,7 +123,7 @@ impl WebPipeline {
                     // build full only when cargo build is successful
                     _ => {
                         this.build_full().await?;
-                        build_tx.send(ActorMsg::FileChange)?;
+                        build_tx.send(ActorMsg::FileChange(this.wasm_hashed_name.clone()))?;
                     }
                 }
             }
@@ -250,8 +250,8 @@ impl WebPipeline {
 <html>
   <head>
     <meta charset="utf-8">
-    <link rel="preload" href="/{name}.wasm" as="fetch" type="application/wasm">
-    <link rel="modulepreload" href="/{name}.js">
+    <link class="gxib-pre-link" rel="preload" href="/{name}.wasm" as="fetch" type="application/wasm">
+    <link class="gxib-pre-link" rel="modulepreload" href="/{name}.js">
   </head>
   <body>
     <script type="module">
@@ -261,7 +261,34 @@ impl WebPipeline {
                 console.log("connected");
             }});
             socket.addEventListener('message', function (event) {{
-                console.log('Message from server ', event.data);
+                const data = JSON.parse(event.data);
+                if (data.event === "FileChange") {{
+                    {{
+                        const pre_links = document.getElementsByClassName("gxib-pre-link")
+                        for ( const el of pre_links )
+                            el.remove();
+                    }}
+                    const [js_name,wasm_name] = [`/${{data.hashed_name}}.js`,`/${{data.hashed_name}}.wasm`];
+                    {{
+                        for ( const attrs of [[
+                            ["rel","preload"],
+                            ["href",js_name],
+                            ["as","fetch"],
+                            ["type","application/wasm"]
+                        ],[
+                            ["rel","modulepreload"],
+                            ["href",wasm_name]
+                        ]] ) {{
+                            const pre_link = document.createElement("link");
+                            pre_link.setAttribute("class","gxib-pre-link");
+                            for ( const attr of attrs )
+                                pre_link.setAttribute(attr[0],attr[1]);
+                            document.head.appendChild(pre_link)
+                        }}
+                    }}
+                    import(js_name).then(mod => mod.default(wasm_name))
+                }}
+                console.log('Message from server ', data);
             }});
         }})()
       import init from '/{name}.js'; init('/{name}.wasm');

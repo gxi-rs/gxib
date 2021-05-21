@@ -17,13 +17,21 @@ const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 /// Msg sent to WS Actor
 #[derive(Debug, Clone)]
 pub enum ActorMsg {
-    FileChange
+    FileChange(String),
+    None,
 }
 
 impl ToString for ActorMsg {
     fn to_string(&self) -> String {
         match self {
-            ActorMsg::FileChange => String::from("FileChange")
+            ActorMsg::FileChange(hashed_name) => format!(
+                r#"{{
+                    "event":"FileChange",
+                    "hashed_name":"{}"
+                }}"#,
+                hashed_name
+            ),
+            _ => String::from("{}"),
         }
     }
 }
@@ -60,7 +68,7 @@ impl Actor for WsActor {
         ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
             // check client heartbeats
             if Instant::now().duration_since(act.heartbeat) > CLIENT_TIMEOUT {
-                println!("Websocket Client heartbeat failed, disconnecting!");
+                eprintln!("Websocket Client heartbeat failed, disconnecting!");
                 ctx.stop();
             } else {
                 ctx.ping(b"");
@@ -81,7 +89,6 @@ impl Handler<ActorMsg> for WsActor {
 /// handler for ws::Message
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
-        println!("WS: {:?}", msg);
         match msg {
             // send a pong back with the same message
             Ok(ws::Message::Ping(msg)) => {
@@ -102,21 +109,19 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
 
 async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
     let data: &watch::Receiver<ActorMsg> = req.app_data().unwrap();
-    let resp = ws::start(
+    ws::start(
         WsActor {
             heartbeat: Instant::now(),
             rx: data.clone(),
         },
         &req,
         stream,
-    );
-    println!("{:?}", resp);
-    resp
+    )
 }
 
 pub fn start_web_server(
     rx: watch::Receiver<ActorMsg>,
-) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
+) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async move {
         actix_web::rt::System::new("web server").block_on(async move {
             HttpServer::new(move || {
@@ -129,11 +134,11 @@ pub fn start_web_server(
                             .index_file("index.html"),
                     )
             })
-                .disable_signals()
-                .bind("127.0.0.1:8080")?
-                .run()
-                .await
-                .with_context(|| "Error running web server")?;
+            .disable_signals()
+            .bind("127.0.0.1:8080")?
+            .run()
+            .await
+            .with_context(|| "Error running web server")?;
             Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
         })?;
         Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
