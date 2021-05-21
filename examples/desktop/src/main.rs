@@ -1,3 +1,14 @@
+use gxi::*;
+
+gxi! {
+    App {}
+    render {
+        Window [
+            Text ( label = "Hello World" )
+        ]
+    }
+}
+
 fn main() {
-    println!("Hello, world!");
+    run::<App>();
 }
