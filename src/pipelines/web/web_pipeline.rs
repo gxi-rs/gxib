@@ -79,8 +79,8 @@ impl WebPipeline {
                 // channel wrote to when build is complete which is read by the server
                 let (build_tx, build_rx) = watch::channel(ActorMsg::None);
 
+                let server = start_web_server(build_rx, web_args.output_dir.clone());
                 let watcher = Self::watch(this, build_tx);
-                let server = start_web_server(build_rx);
 
                 // wait for both to complete and set context for each
                 let (watcher_result, server_result) = tokio::join!(watcher, server);
