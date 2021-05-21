@@ -132,7 +132,7 @@ async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, E
 pub fn start_web_server(
     rx: watch::Receiver<ActorMsg>,
     serve_dir: String,
-) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
+) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async move {
         actix_web::rt::System::new("web server").block_on(async move {
             HttpServer::new(move || {
@@ -145,11 +145,11 @@ pub fn start_web_server(
                             .index_file("index.html"),
                     )
             })
-                .disable_signals()
-                .bind("127.0.0.1:8080")?
-                .run()
-                .await
-                .with_context(|| "Error running web server")?;
+            .disable_signals()
+            .bind("127.0.0.1:8080")?
+            .run()
+            .await
+            .with_context(|| "Error running web server")?;
             Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
         })?;
         Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
