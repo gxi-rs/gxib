@@ -118,6 +118,7 @@ impl WebPipeline {
                 .with_context(|| format!("error watching {}/src", &this.args.dir))?;
 
             while rx.changed().await.is_ok() {
+                println!("changed");
                 match this.build().await {
                     Err(err) => eprintln!("Error while building\n{}", err),
                     // build full only when cargo build is successful
@@ -258,37 +259,18 @@ impl WebPipeline {
         (function () {{
             const socket = new WebSocket('ws://localhost:8080/__gxi__');
             socket.addEventListener('open', function (event) {{
-                console.log("connected");
+                console.log("Gxib > Connected to Server: Hot Reload Enabled");
             }});
-            socket.addEventListener('message', function (event) {{
+            socket.addEventListener('close', function (event) {{
+                console.error("Gxib > Disconnected from server");
+                if (confirm('Disconnected from server. Refresh ?'))
+                    location.reload()
+            }});
+            socket.addEventListener('message', event => {{
                 const data = JSON.parse(event.data);
-                if (data.event === "FileChange") {{
-                    {{
-                        const pre_links = document.getElementsByClassName("gxib-pre-link")
-                        for ( const el of pre_links )
-                            el.remove();
-                    }}
-                    const [js_name,wasm_name] = [`/${{data.hashed_name}}.js`,`/${{data.hashed_name}}.wasm`];
-                    {{
-                        for ( const attrs of [[
-                            ["rel","preload"],
-                            ["href",js_name],
-                            ["as","fetch"],
-                            ["type","application/wasm"]
-                        ],[
-                            ["rel","modulepreload"],
-                            ["href",wasm_name]
-                        ]] ) {{
-                            const pre_link = document.createElement("link");
-                            pre_link.setAttribute("class","gxib-pre-link");
-                            for ( const attr of attrs )
-                                pre_link.setAttribute(attr[0],attr[1]);
-                            document.head.appendChild(pre_link)
-                        }}
-                    }}
-                    import(js_name).then(mod => mod.default(wasm_name))
-                }}
-                console.log('Message from server ', data);
+                if (data.event === "FileChange")
+                    location.reload()
+                console.log('Gxib > Message from server ', data);
             }});
         }})()
       import init from '/{name}.js'; init('/{name}.wasm');
