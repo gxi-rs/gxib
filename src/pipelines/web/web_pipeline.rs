@@ -77,7 +77,7 @@ impl WebPipeline {
             // check if serve
             if web_args.serve {
                 // channel wrote to when build is complete which is read by the server
-                let (build_tx, build_rx) = watch::channel(());
+                let (build_tx, build_rx) = watch::channel(ActorMsg::FileChange);
 
                 let watcher = Self::watch(this, build_tx);
                 let server = start_web_server(build_rx);
@@ -93,7 +93,7 @@ impl WebPipeline {
 
     pub fn watch(
         this: Self,
-        build_tx: watch::Sender<()>,
+        build_tx: watch::Sender<ActorMsg>,
     ) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
         task::spawn(async move {
             // watcher
@@ -123,8 +123,7 @@ impl WebPipeline {
                     // build full only when cargo build is successful
                     _ => {
                         this.build_full().await?;
-                        println!("sending");
-                        build_tx.send(())?;
+                        build_tx.send(ActorMsg::FileChange)?;
                     }
                 }
             }
