@@ -8,6 +8,7 @@ use futures::future::Future;
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
 use tokio::task;
+use std::path::PathBuf;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -131,7 +132,7 @@ async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, E
 
 pub fn start_web_server(
     rx: watch::Receiver<ActorMsg>,
-    serve_dir: String,
+    serve_dir: PathBuf,
 ) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async move {
         actix_web::rt::System::new("web server").block_on(async move {

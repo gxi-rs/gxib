@@ -23,7 +23,7 @@ actix-web = "3"
 actix-web-actors = "3"
 actix-files = "0.5.0"
 actix = "0.10"
-pretty_env_logger = "0.4.0"
+simplelog = "0.10.0"
 log = "0.4"
 
 [dependencies.toml]
@@ -33,3 +33,7 @@ features = ["preserve_order"]
 [dependencies.tokio]
 version = "1"
 features = ["full", "process"]
+
+[dependencies.gxi]
+version = ""
+features = ["web"]

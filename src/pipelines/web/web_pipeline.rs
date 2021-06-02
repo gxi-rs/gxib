@@ -31,29 +31,25 @@ impl WebPipeline {
         {
             let web_args = args.subcmd.as_web_mut()?;
             // make target dir absolute
-            web_args.target_dir = Path::new(&web_args.target_dir)
+            web_args.target_dir = web_args.target_dir
                 .absolutize()
                 .with_context(|| {
                     format!(
                         "error getting absolute path for --target-dir {}",
-                        web_args.target_dir
+                        web_args.target_dir.to_str().unwrap()
                     )
                 })?
-                .to_str()
-                .unwrap()
-                .to_string();
+                .to_path_buf();
             // make output dir absolute
-            web_args.output_dir = Path::new(&web_args.output_dir)
+            web_args.output_dir = web_args.output_dir
                 .absolutize()
                 .with_context(|| {
                     format!(
                         "error getting absolute path for --output-dir {}",
-                        web_args.output_dir
+                        web_args.output_dir.to_str().unwrap()
                     )
                 })?
-                .to_str()
-                .unwrap()
-                .to_string();
+                .to_path_buf();
         }
         let mut this = Self {
             args,
@@ -75,7 +71,7 @@ impl WebPipeline {
             // do a full build
             this.build_full().await?;
             // check if serve
-            if web_args.serve {
+            if web_args.serve.is_some() {
                 // channel wrote to when build is complete which is read by the server
                 let (build_tx, build_rx) = watch::channel(ActorMsg::None);
 
@@ -94,7 +90,7 @@ impl WebPipeline {
     pub fn watch(
         this: Self,
         build_tx: watch::Sender<ActorMsg>,
-    ) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
+    ) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
         task::spawn(async move {
             // watcher
 
@@ -111,7 +107,7 @@ impl WebPipeline {
                     }
                     Err(e) => eprintln!("Error while watching dir\n{}", e),
                 })
-                .with_context(|| "Error initialising watcher")?;
+                    .with_context(|| "Error initialising watcher")?;
 
             watcher
                 .watch(format!("{}/src", &this.args.dir), RecursiveMode::Recursive)
@@ -150,7 +146,7 @@ impl WebPipeline {
             Path::new(&web_args.output_dir).join("index.html"),
             self.generate_html(),
         )
-        .await?;
+            .await?;
         Ok(())
     }
 
@@ -163,7 +159,7 @@ impl WebPipeline {
             Some(&web_subcmd.output_dir),
             None,
         )
-        .await?;
+            .await?;
         Ok(())
     }
 
@@ -203,7 +199,7 @@ impl WebPipeline {
             "--target",
             WEB_TARGET,
             "--target-dir",
-            &web_subcmd.target_dir,
+            &web_subcmd.target_dir.to_str().unwrap(),
         ];
         if web_subcmd.release {
             args.push("--release")
@@ -231,7 +227,7 @@ impl WebPipeline {
                 "--no-typescript",
                 // dir to place the assets at
                 "--out-dir",
-                &web_subcmd.output_dir,
+                web_subcmd.output_dir.to_str().unwrap(),
                 // name of output file
                 "--out-name",
                 &format!("{}.wasm", self.wasm_hashed_name.as_str()),
@@ -239,8 +235,8 @@ impl WebPipeline {
             Option::<&str>::None,
             None,
         )
-        .await
-        .with_context(|| format!("error running cargo-bindgen on "))?;
+            .await
+            .with_context(|| format!("error running cargo-bindgen on "))?;
         Ok(())
     }
 

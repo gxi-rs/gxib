@@ -1,9 +1,10 @@
 use std::path::Path;
 
-pub use anyhow::*;
 use clap::Clap;
 use tokio::fs::{read, write};
+use simplelog::*;
 
+pub use anyhow::*;
 pub use crate::cli::*;
 pub use crate::pipelines::*;
 pub use crate::utils::*;
@@ -19,9 +20,7 @@ pub const CARGO_TOML: &str = "Cargo.toml";
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    pretty_env_logger::formatted_builder()
-        .parse_filters("info")
-        .init();
+    TermLogger::init(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto)?;
     // get the command line arguments
     let args: Args = Args::parse();
     // parse Cargo.toml
