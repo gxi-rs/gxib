@@ -106,10 +106,7 @@ impl WebPipeline {
         build_tx: Option<watch::Sender<ActorMsg>>,
     ) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
         task::spawn(async move {
-            // watcher
-
             let (tx, mut rx) = watch::channel(());
-
             let mut watcher: RecommendedWatcher =
                 Watcher::new_immediate(move |res: notify::Result<event::Event>| match res {
                     Ok(event) => {
@@ -119,7 +116,7 @@ impl WebPipeline {
                             }
                         }
                     }
-                    Err(e) => eprintln!("Error while watching dir\n{}", e),
+                    Err(e) => error!("Error while watching dir\n{}", e),
                 })
                     .with_context(|| "Error initialising watcher")?;
 
@@ -128,9 +125,9 @@ impl WebPipeline {
                 .with_context(|| format!("error watching {}/src", &this.args.dir))?;
 
             while rx.changed().await.is_ok() {
-                println!("changed");
+                info!("Re-building");
                 match this.build().await {
-                    Err(err) => eprintln!("Error while building\n{}", err),
+                    Err(err) => error!("Error while building\n{}", err),
                     // build full only when cargo build is successful
                     _ => {
                         this.build_full().await?;
