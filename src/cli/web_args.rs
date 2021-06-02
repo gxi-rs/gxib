@@ -11,6 +11,12 @@ pub struct WebArgs {
     /// start development server
     #[clap(short, long)]
     pub serve: bool,
+    /// build on file change
+    #[clap(short,long)]
+    pub watch: bool,
+    /// hot reload build files
+    #[clap(short='r',long="hot-reload")]
+    pub hot_reload: bool,
     /// production build
     #[clap(long)]
     pub release: bool,
@@ -19,5 +25,5 @@ pub struct WebArgs {
     pub target_dir: String,
     /// output dir for cargo builds.
     #[clap(long = "output-dir", short, default_value = "target/.gxi")]
-    pub output_dir: String,
+    pub output_dir: String, 
 }

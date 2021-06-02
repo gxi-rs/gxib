@@ -8,6 +8,7 @@ pub use crate::cli::*;
 pub use crate::pipelines::*;
 pub use crate::utils::*;
 pub use crate::version::*;
+pub use log::*;
 
 mod cli;
 mod pipelines;
@@ -18,6 +19,9 @@ pub const CARGO_TOML: &str = "Cargo.toml";
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    pretty_env_logger::formatted_builder()
+        .parse_filters("info")
+        .init();
     // get the command line arguments
     let args: Args = Args::parse();
     // parse Cargo.toml
@@ -36,9 +40,9 @@ async fn main() -> Result<()> {
             args: &args,
             cargo_toml: &mut cargo_toml,
         }
-        .run()
-        .await
-        .with_context(|| "Error running desktop pipeline")?,
+            .run()
+            .await
+            .with_context(|| "Error running desktop pipeline")?,
     };
     Ok(())
 }

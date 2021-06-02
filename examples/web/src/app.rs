@@ -1,7 +1,7 @@
 use crate::*;
 
 gxi! {
-    App {}
+    pub App {}
     render {
         Body [
             H1 ( inner_html = "hello-world" )
