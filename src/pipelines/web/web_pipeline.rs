@@ -94,7 +94,7 @@ impl WebPipeline {
                 start_web_server(None, web_args.output_dir.clone(), serve.clone()).await.with_context(|| SERVER_ERROR)??;
             }
             // if only watch
-            else {
+            else if web_args.watch {
                 Self::watch(this, None).await.with_context(|| WATCHER_ERROR)??;
             }
         }
