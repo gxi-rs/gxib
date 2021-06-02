@@ -136,6 +136,7 @@ async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, E
 pub fn start_web_server(
     rx: Option<watch::Receiver<ActorMsg>>,
     serve_dir: PathBuf,
+    serve_addrs: String,
 ) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async move {
         actix_web::rt::System::new("web server").block_on(async move {
@@ -154,7 +155,7 @@ pub fn start_web_server(
                     )
             })
                 .disable_signals()
-                .bind("127.0.0.1:8080")?
+                .bind(serve_addrs.clone())?
                 .run()
                 .await
                 .with_context(|| "Error running web server")?;

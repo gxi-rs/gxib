@@ -72,12 +72,12 @@ impl WebPipeline {
             const SERVER_ERROR: &str = "Error while launching server";
 
             // if only watch
-            if web_args.watch && web_args.serve.is_none() {
+            if web_args.watch && web_args.serve.is_empty() {
                 Self::watch(this, None).await.with_context(|| WATCHER_ERROR)??;
             }
             // if only serve
-            else if web_args.serve.is_none() && !web_args.watch {
-                start_web_server(None, web_args.output_dir.clone()).await.with_context(|| SERVER_ERROR)??;
+            else if !web_args.serve.is_empty() && !web_args.watch {
+                start_web_server(None, web_args.output_dir.clone(), web_args.serve.clone()).await.with_context(|| SERVER_ERROR)??;
             }
             // watch and serve
             else {
@@ -89,7 +89,7 @@ impl WebPipeline {
                     (None, None)
                 };
 
-                let server = start_web_server(build_rx, web_args.output_dir.clone());
+                let server = start_web_server(build_rx, web_args.output_dir.clone(), web_args.serve.clone());
                 let watcher = Self::watch(this, build_tx);
 
                 // wait for both to complete and set context for each
