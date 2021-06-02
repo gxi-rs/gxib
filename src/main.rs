@@ -29,19 +29,23 @@ async fn main() -> Result<()> {
     match args.subcmd {
         //web
         SubCommands::Web(_) => {
+            info!("Building Web App");
             let web_pipeline = WebPipeline::new(args, cargo_toml).await?;
             WebPipeline::run(web_pipeline)
                 .await
                 .with_context(|| "Error running web pipeline")?;
         }
         //desktop
-        _ => DesktopPipeline {
-            args: &args,
-            cargo_toml: &mut cargo_toml,
+        _ => {
+            info!("Building Desktop App");
+            DesktopPipeline {
+                args: &args,
+                cargo_toml: &mut cargo_toml,
+            }
+                .run()
+                .await
+                .with_context(|| "Error running desktop pipeline")?;
         }
-            .run()
-            .await
-            .with_context(|| "Error running desktop pipeline")?,
     };
     Ok(())
 }

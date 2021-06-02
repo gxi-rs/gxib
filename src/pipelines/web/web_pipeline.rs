@@ -21,7 +21,6 @@ pub struct WebPipeline {
 impl WebPipeline {
     /// builds and generates Self struct
     pub async fn new(mut args: Args, mut cargo_toml: CargoToml) -> Result<WebPipeline> {
-        info!("building web");
         // write web feature
         {
             cargo_toml.add_features(vec![WEB_FEATURE.to_string()]);
