@@ -71,16 +71,8 @@ impl WebPipeline {
             const WATCHER_ERROR: &str = "Error while watching local file changes";
             const SERVER_ERROR: &str = "Error while launching server";
 
-            // if only watch
-            if web_args.watch && web_args.serve.is_empty() {
-                Self::watch(this, None).await.with_context(|| WATCHER_ERROR)??;
-            }
-            // if only serve
-            else if !web_args.serve.is_empty() && !web_args.watch {
-                start_web_server(None, web_args.output_dir.clone(), web_args.serve.clone()).await.with_context(|| SERVER_ERROR)??;
-            }
             // watch and serve
-            else {
+            if web_args.watch && web_args.serve.is_some() {
                 // create channels only when hot reload is enabled
                 let (build_tx, build_rx) = if web_args.hot_reload {
                     let (build_tx, build_rx) = watch::channel(ActorMsg::None);
@@ -89,13 +81,21 @@ impl WebPipeline {
                     (None, None)
                 };
 
-                let server = start_web_server(build_rx, web_args.output_dir.clone(), web_args.serve.clone());
+                let server = start_web_server(build_rx, web_args.output_dir.clone(), web_args.serve.as_ref().unwrap().clone());
                 let watcher = Self::watch(this, build_tx);
 
                 // wait for both to complete and set context for each
                 let (watcher_result, server_result) = tokio::join!(watcher, server);
                 watcher_result.with_context(|| WATCHER_ERROR)??;
                 server_result.with_context(|| SERVER_ERROR)??;
+            }
+            // if only serve
+            else if let Some(serve) = &web_args.serve {
+                start_web_server(None, web_args.output_dir.clone(), serve.clone()).await.with_context(|| SERVER_ERROR)??;
+            }
+            // if only watch
+            else {
+                Self::watch(this, None).await.with_context(|| WATCHER_ERROR)??;
             }
         }
         Ok(())
@@ -106,6 +106,7 @@ impl WebPipeline {
         build_tx: Option<watch::Sender<ActorMsg>>,
     ) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
         task::spawn(async move {
+            info!("Watching");
             let (tx, mut rx) = watch::channel(());
             let mut watcher: RecommendedWatcher =
                 Watcher::new_immediate(move |res: notify::Result<event::Event>| match res {
@@ -255,9 +256,10 @@ impl WebPipeline {
 
     /// generates html
     pub fn generate_html(&self) -> String {
-        let hot_reload_script = if self.args.subcmd.as_web().unwrap().hot_reload {
-            r#"(function () {{
-    const socket = new WebSocket('ws://localhost:8080/__gxi__');
+        let web_args = self.args.subcmd.as_web().unwrap();
+        let hot_reload_script = if web_args.hot_reload {
+            format!(r#"(function () {{
+    const socket = new WebSocket('ws://{serve_addrs}/__gxi__');
     socket.addEventListener('open', function (event) {{
         console.log("Gxib > Connected to Server: Hot Reload Enabled");
     }});
@@ -272,9 +274,9 @@ impl WebPipeline {
             location.reload()
         console.log('Gxib > Message from server ', data);
     }});
-}})()"#
+}})()"#, serve_addrs = web_args.serve.as_ref().unwrap())
         } else {
-            ""
+            String::new()
         };
         format!(
             r#"<!DOCTYPE html>

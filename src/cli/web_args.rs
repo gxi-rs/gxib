@@ -10,8 +10,8 @@ setting = AppSettings::ColoredHelp
 )]
 pub struct WebArgs {
     /// start serving files at host:port
-    #[clap(short, long, default_value = "localhost:8080",value_hint = ValueHint::Hostname)]
-    pub serve: String,
+    #[clap(short, long, value_hint = ValueHint::Hostname)]
+    pub serve: Option<String>,
     /// build on file change
     #[clap(short, long)]
     pub watch: bool,
