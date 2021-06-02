@@ -4,7 +4,7 @@ use crate::*;
 
 #[derive(Clap)]
 #[clap(
-    version = VERSION,
+    version = clap::crate_version!(),
     author = "aniketfuryrocks <prajapati.ani306@gmail.com>",
     setting = AppSettings::ColoredHelp
 )]

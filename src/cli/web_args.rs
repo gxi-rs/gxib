@@ -4,7 +4,7 @@ use std::path::PathBuf;
 /// build for the web platform using wasm
 #[derive(Clap)]
 #[clap(
-version = crate::VERSION,
+version = clap::crate_version!(),
 author = "aniketfuryrocks <prajapati.ani306@gmail.com>",
 setting = AppSettings::ColoredHelp
 )]

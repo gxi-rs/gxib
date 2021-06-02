@@ -8,13 +8,11 @@ pub use anyhow::*;
 pub use crate::cli::*;
 pub use crate::pipelines::*;
 pub use crate::utils::*;
-pub use crate::version::*;
 pub use log::*;
 
 mod cli;
 mod pipelines;
 mod utils;
-mod version;
 
 pub const CARGO_TOML: &str = "Cargo.toml";
 
