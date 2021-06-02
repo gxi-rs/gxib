@@ -69,18 +69,34 @@ impl WebPipeline {
             let web_args = &this.args.subcmd.as_web()?;
             // do a full build
             this.build_full().await?;
-            // check if serve
-            if web_args.serve.is_some() {
-                // channel wrote to when build is complete which is read by the server
-                let (build_tx, build_rx) = watch::channel(ActorMsg::None);
+            const WATCHER_ERROR: &str = "Error while watching local file changes";
+            const SERVER_ERROR: &str = "Error while launching server";
+
+            // if only watch
+            if web_args.watch && web_args.serve.is_none() {
+                Self::watch(this, None).await.with_context(|| WATCHER_ERROR)??;
+            }
+            // if only serve
+            else if web_args.serve.is_none() && !web_args.watch {
+                start_web_server(None, web_args.output_dir.clone()).await.with_context(|| SERVER_ERROR)??;
+            }
+            // watch and serve
+            else {
+                // create channels only when hot reload is enabled
+                let (build_tx, build_rx) = if web_args.hot_reload {
+                    let (build_tx, build_rx) = watch::channel(ActorMsg::None);
+                    (Some(build_tx), Some(build_rx))
+                } else {
+                    (None, None)
+                };
 
                 let server = start_web_server(build_rx, web_args.output_dir.clone());
                 let watcher = Self::watch(this, build_tx);
 
                 // wait for both to complete and set context for each
                 let (watcher_result, server_result) = tokio::join!(watcher, server);
-                watcher_result.with_context(|| "Error while watching local file changes")??;
-                server_result.with_context(|| "Error while launching server")??;
+                watcher_result.with_context(|| WATCHER_ERROR)??;
+                server_result.with_context(|| SERVER_ERROR)??;
             }
         }
         Ok(())
@@ -88,7 +104,7 @@ impl WebPipeline {
 
     pub fn watch(
         this: Self,
-        build_tx: watch::Sender<ActorMsg>,
+        build_tx: Option<watch::Sender<ActorMsg>>,
     ) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
         task::spawn(async move {
             // watcher
@@ -119,7 +135,9 @@ impl WebPipeline {
                     // build full only when cargo build is successful
                     _ => {
                         this.build_full().await?;
-                        build_tx.send(ActorMsg::FileChange(this.wasm_hashed_name.clone()))?;
+                        if let Some(build_tx) = &build_tx {
+                            build_tx.send(ActorMsg::FileChange(this.wasm_hashed_name.clone()))?;
+                        }
                     }
                 }
             }
@@ -241,38 +259,44 @@ impl WebPipeline {
 
     /// generates html
     pub fn generate_html(&self) -> String {
+        let hot_reload_script = if self.args.subcmd.as_web().unwrap().hot_reload {
+            r#"(function () {{
+    const socket = new WebSocket('ws://localhost:8080/__gxi__');
+    socket.addEventListener('open', function (event) {{
+        console.log("Gxib > Connected to Server: Hot Reload Enabled");
+    }});
+    socket.addEventListener('close', function (event) {{
+        console.error("Gxib > Disconnected from server");
+        if (confirm('Disconnected from server. Refresh ?'))
+            location.reload()
+    }});
+    socket.addEventListener('message', event => {{
+        const data = JSON.parse(event.data);
+        if (data.event === "FileChange")
+            location.reload()
+        console.log('Gxib > Message from server ', data);
+    }});
+}})()"#
+        } else {
+            ""
+        };
         format!(
             r#"<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
-    <link class="gxib-pre-link" rel="preload" href="/{name}.wasm" as="fetch" type="application/wasm">
-    <link class="gxib-pre-link" rel="modulepreload" href="/{name}.js">
+    <link rel="preload" href="/{name}.wasm" as="fetch" type="application/wasm">
+    <link rel="modulepreload" href="/{name}.js">
   </head>
   <body>
     <script type="module">
-        (function () {{
-            const socket = new WebSocket('ws://localhost:8080/__gxi__');
-            socket.addEventListener('open', function (event) {{
-                console.log("Gxib > Connected to Server: Hot Reload Enabled");
-            }});
-            socket.addEventListener('close', function (event) {{
-                console.error("Gxib > Disconnected from server");
-                if (confirm('Disconnected from server. Refresh ?'))
-                    location.reload()
-            }});
-            socket.addEventListener('message', event => {{
-                const data = JSON.parse(event.data);
-                if (data.event === "FileChange")
-                    location.reload()
-                console.log('Gxib > Message from server ', data);
-            }});
-        }})()
-      import init from '/{name}.js'; init('/{name}.wasm');
+        {hot_reload_script}
+        import init from '/{name}.js'; init('/{name}.wasm');
     </script>
   </body>
 </html>"#,
-            name = self.wasm_hashed_name
+            name = self.wasm_hashed_name,
+            hot_reload_script = hot_reload_script
         )
     }
 }

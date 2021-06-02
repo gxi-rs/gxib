@@ -19,7 +19,7 @@ pub struct WebArgs {
     #[clap(short, long)]
     pub watch: bool,
     /// hot reload build files
-    #[clap(short = 'r', long = "hot-reload")]
+    #[clap(short = 'r', long = "hot-reload", requires = "serve", requires = "watch")]
     pub hot_reload: bool,
     /// production build
     #[clap(long)]

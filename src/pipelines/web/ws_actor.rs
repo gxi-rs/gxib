@@ -44,7 +44,7 @@ impl actix::Message for ActorMsg {
 /// Web Socket Actor
 pub struct WsActor {
     heartbeat: Instant,
-    rx: watch::Receiver<ActorMsg>,
+    rx: Option<watch::Receiver<ActorMsg>>,
 }
 
 /// impl Actor for WsActor
@@ -53,8 +53,8 @@ impl Actor for WsActor {
 
     fn started(&mut self, ctx: &mut Self::Context) {
         // listen to watch::channel for msg send by WebPipeline
-        {
-            let mut rx = self.rx.clone();
+        if let Some(rx) = &self.rx {
+            let mut rx = rx.clone();
             let addr = ctx.address();
             ctx.spawn(actix::fut::wrap_future::<_, Self>(async move {
                 let mut once = false;
@@ -119,11 +119,14 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
 }
 
 async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
-    let data: &watch::Receiver<ActorMsg> = req.app_data().unwrap();
     ws::start(
         WsActor {
             heartbeat: Instant::now(),
-            rx: data.clone(),
+            rx: if let Some(data) = req.app_data::<watch::Receiver<ActorMsg>>() {
+                Some(data.clone())
+            } else {
+                None
+            },
         },
         &req,
         stream,
@@ -131,14 +134,18 @@ async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, E
 }
 
 pub fn start_web_server(
-    rx: watch::Receiver<ActorMsg>,
+    rx: Option<watch::Receiver<ActorMsg>>,
     serve_dir: PathBuf,
-) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
+) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async move {
         actix_web::rt::System::new("web server").block_on(async move {
             HttpServer::new(move || {
-                App::new()
-                    .app_data(rx.clone())
+                if let Some(rx) = &rx {
+                    App::new()
+                        .app_data(rx.clone())
+                } else {
+                    App::new()
+                }
                     .route("/__gxi__", web::get().to(index))
                     .service(
                         actix_files::Files::new("/", serve_dir.clone())
@@ -146,11 +153,11 @@ pub fn start_web_server(
                             .index_file("index.html"),
                     )
             })
-            .disable_signals()
-            .bind("127.0.0.1:8080")?
-            .run()
-            .await
-            .with_context(|| "Error running web server")?;
+                .disable_signals()
+                .bind("127.0.0.1:8080")?
+                .run()
+                .await
+                .with_context(|| "Error running web server")?;
             Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
         })?;
         Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
