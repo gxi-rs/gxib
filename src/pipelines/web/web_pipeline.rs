@@ -29,7 +29,8 @@ impl WebPipeline {
         {
             let web_args = args.subcmd.as_web_mut()?;
             // make target dir absolute
-            web_args.target_dir = web_args.target_dir
+            web_args.target_dir = web_args
+                .target_dir
                 .absolutize()
                 .with_context(|| {
                     format!(
@@ -39,7 +40,8 @@ impl WebPipeline {
                 })?
                 .to_path_buf();
             // make output dir absolute
-            web_args.output_dir = web_args.output_dir
+            web_args.output_dir = web_args
+                .output_dir
                 .absolutize()
                 .with_context(|| {
                     format!(
@@ -117,11 +119,15 @@ impl WebPipeline {
                         rx: None,
                     },
                     serve.clone(),
-                ).await.with_context(|| SERVER_ERROR)??;
+                )
+                .await
+                .with_context(|| SERVER_ERROR)??;
             }
             // if only watch
             else if web_args.watch {
-                Self::watch(this, None).await.with_context(|| WATCHER_ERROR)??;
+                Self::watch(this, None)
+                    .await
+                    .with_context(|| WATCHER_ERROR)??;
             }
         }
         Ok(())
@@ -130,7 +136,7 @@ impl WebPipeline {
     pub fn watch(
         this: Self,
         build_tx: Option<watch::Sender<WsActorMsg>>,
-    ) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
+    ) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
         task::spawn(async move {
             info!("Watching");
             let (tx, mut rx) = watch::channel(());
@@ -145,7 +151,7 @@ impl WebPipeline {
                     }
                     Err(e) => error!("Error while watching dir\n{}", e),
                 })
-                    .with_context(|| "Error initialising watcher")?;
+                .with_context(|| "Error initialising watcher")?;
 
             watcher
                 .watch(format!("{}/src", &this.args.dir), RecursiveMode::Recursive)
@@ -186,7 +192,7 @@ impl WebPipeline {
             Path::new(&web_args.output_dir).join("index.html"),
             self.generate_html(),
         )
-            .await?;
+        .await?;
         Ok(())
     }
 
@@ -199,7 +205,7 @@ impl WebPipeline {
             Some(&web_subcmd.output_dir),
             None,
         )
-            .await?;
+        .await?;
         Ok(())
     }
 
@@ -275,8 +281,8 @@ impl WebPipeline {
             Option::<&str>::None,
             None,
         )
-            .await
-            .with_context(|| format!("error running cargo-bindgen on "))?;
+        .await
+        .with_context(|| format!("error running cargo-bindgen on "))?;
         Ok(())
     }
 
@@ -284,7 +290,8 @@ impl WebPipeline {
     pub fn generate_html(&self) -> String {
         let web_args = self.args.subcmd.as_web().unwrap();
         let hot_reload_script = if web_args.hot_reload {
-            format!(r#"(function () {{
+            format!(
+                r#"(function () {{
     const socket = new WebSocket('ws://{serve_addrs}/__gxi__');
     socket.addEventListener('open', function (event) {{
         console.log("Gxib > Connected to Server: Hot Reload Enabled");
@@ -300,7 +307,9 @@ impl WebPipeline {
             location.reload()
         console.log('Gxib > Message from server ', data);
     }});
-}})()"#, serve_addrs = web_args.serve.as_ref().unwrap())
+}})()"#,
+                serve_addrs = web_args.serve.as_ref().unwrap()
+            )
         } else {
             String::new()
         };

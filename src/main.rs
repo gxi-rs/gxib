@@ -1,13 +1,13 @@
 use std::path::Path;
 
 use clap::Clap;
-use tokio::fs::{read, write};
 use simplelog::*;
+use tokio::fs::{read, write};
 
-pub use anyhow::*;
 pub use crate::cli::*;
 pub use crate::pipelines::*;
 pub use crate::utils::*;
+pub use anyhow::*;
 pub use log::*;
 
 mod cli;
@@ -18,7 +18,12 @@ pub const CARGO_TOML: &str = "Cargo.toml";
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    TermLogger::init(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto)?;
+    TermLogger::init(
+        LevelFilter::Info,
+        Config::default(),
+        TerminalMode::Mixed,
+        ColorChoice::Auto,
+    )?;
     // get the command line arguments
     let args: Args = Args::parse();
     // parse Cargo.toml
@@ -40,9 +45,9 @@ async fn main() -> Result<()> {
                 args: &args,
                 cargo_toml: &mut cargo_toml,
             }
-                .run()
-                .await
-                .with_context(|| "Error running desktop pipeline")?;
+            .run()
+            .await
+            .with_context(|| "Error running desktop pipeline")?;
         }
     };
     Ok(())

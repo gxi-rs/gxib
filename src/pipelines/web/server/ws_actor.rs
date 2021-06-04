@@ -40,7 +40,7 @@ impl actix::Message for WsActorMsg {
 /// Web Socket Actor
 pub struct WsActor {
     pub(crate) heartbeat: Instant,
-    pub(crate) rx: Option<watch::Receiver<WsActorMsg>>
+    pub(crate) rx: Option<watch::Receiver<WsActorMsg>>,
 }
 
 /// impl Actor for WsActor

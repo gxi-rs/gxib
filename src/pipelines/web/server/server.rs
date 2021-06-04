@@ -1,13 +1,13 @@
+use crate::pipelines::web::server::ws_actor::{WsActor, WsActorMsg};
 use crate::*;
 use actix_web::http::StatusCode;
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
 use futures::future::Future;
 use std::path::PathBuf;
-use std::time::{Instant};
+use std::time::Instant;
 use tokio::sync::watch;
 use tokio::task;
-use crate::pipelines::web::server::ws_actor::{WsActor, WsActorMsg};
 
 #[derive(Clone)]
 pub struct WebServerState {
@@ -75,7 +75,7 @@ async fn index(req: HttpRequest) -> Result<HttpResponse, Error> {
 pub fn start_web_server(
     state: WebServerState,
     serve_addrs: String,
-) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
+) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async move {
         actix_web::rt::System::new("web server").block_on(async move {
             info!("Serving at http://{}", serve_addrs);
@@ -85,11 +85,11 @@ pub fn start_web_server(
                     .route("/__gxi__", web::get().to(web_socket_route))
                     .service(index)
             })
-                .disable_signals()
-                .bind(serve_addrs.clone())?
-                .run()
-                .await
-                .with_context(|| "Error running web server")?;
+            .disable_signals()
+            .bind(serve_addrs.clone())?
+            .run()
+            .await
+            .with_context(|| "Error running web server")?;
             Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
         })?;
         Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
