@@ -2,13 +2,9 @@
 use crate::*;
 use actix::prelude::*;
 use actix::{Actor, StreamHandler};
-use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
-use futures::future::Future;
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
-use tokio::task;
-use std::path::PathBuf;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -17,15 +13,15 @@ const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// Msg sent to WS Actor
 #[derive(Debug, Clone)]
-pub enum ActorMsg {
+pub enum WsActorMsg {
     FileChange(String),
     None,
 }
 
-impl ToString for ActorMsg {
+impl ToString for WsActorMsg {
     fn to_string(&self) -> String {
         match self {
-            ActorMsg::FileChange(hashed_name) => format!(
+            WsActorMsg::FileChange(hashed_name) => format!(
                 r#"{{
                     "event":"FileChange",
                     "hashed_name":"{}"
@@ -37,14 +33,14 @@ impl ToString for ActorMsg {
     }
 }
 
-impl actix::Message for ActorMsg {
+impl actix::Message for WsActorMsg {
     type Result = ();
 }
 
 /// Web Socket Actor
 pub struct WsActor {
-    heartbeat: Instant,
-    rx: Option<watch::Receiver<ActorMsg>>,
+    pub(crate) heartbeat: Instant,
+    pub(crate) rx: Option<watch::Receiver<WsActorMsg>>
 }
 
 /// impl Actor for WsActor
@@ -55,15 +51,15 @@ impl Actor for WsActor {
         // listen to watch::channel for msg send by WebPipeline
         if let Some(rx) = &self.rx {
             let mut rx = rx.clone();
-            let addr = ctx.address();
+            let adds = ctx.address();
             ctx.spawn(actix::fut::wrap_future::<_, Self>(async move {
                 let mut once = false;
                 while rx.changed().await.is_ok() {
                     if once {
                         let k = rx.borrow();
                         match *k {
-                            ActorMsg::None => {}
-                            _ => addr
+                            WsActorMsg::None => {}
+                            _ => adds
                                 .send(k.clone())
                                 .await
                                 .with_context(|| "Unable to send msg to actor")
@@ -89,10 +85,10 @@ impl Actor for WsActor {
 }
 
 /// React to Actor Msgs
-impl Handler<ActorMsg> for WsActor {
+impl Handler<WsActorMsg> for WsActor {
     type Result = ();
     /// Handle incoming actor messages from rx channel
-    fn handle(&mut self, msg: ActorMsg, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: WsActorMsg, ctx: &mut Self::Context) -> Self::Result {
         ctx.text(msg.to_string())
     }
 }
@@ -116,52 +112,4 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
             _ => ctx.stop(),
         }
     }
-}
-
-async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
-    ws::start(
-        WsActor {
-            heartbeat: Instant::now(),
-            rx: if let Some(data) = req.app_data::<watch::Receiver<ActorMsg>>() {
-                Some(data.clone())
-            } else {
-                None
-            },
-        },
-        &req,
-        stream,
-    )
-}
-
-pub fn start_web_server(
-    rx: Option<watch::Receiver<ActorMsg>>,
-    serve_dir: PathBuf,
-    serve_addrs: String,
-) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
-    tokio::task::spawn(async move {
-        actix_web::rt::System::new("web server").block_on(async move {
-            info!("Serving at http://{}", serve_addrs);
-            HttpServer::new(move || {
-                if let Some(rx) = &rx {
-                    App::new()
-                        .app_data(rx.clone())
-                } else {
-                    App::new()
-                }
-                    .route("/__gxi__", web::get().to(index))
-                    .service(
-                        actix_files::Files::new("/", serve_dir.clone())
-                            .prefer_utf8(true)
-                            .index_file("index.html"),
-                    )
-            })
-                .disable_signals()
-                .bind(serve_addrs.clone())?
-                .run()
-                .await
-                .with_context(|| "Error running web server")?;
-            Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
-        })?;
-        Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
-    })
 }
