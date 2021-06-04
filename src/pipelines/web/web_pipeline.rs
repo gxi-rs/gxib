@@ -75,16 +75,20 @@ impl WebPipeline {
             if web_args.watch && web_args.serve.is_some() {
                 // create channels only when hot reload is enabled
                 let (build_tx, build_rx) = if web_args.hot_reload {
-                    let (build_tx, build_rx) = watch::channel(ActorMsg::None);
+                    let (build_tx, build_rx) = watch::channel(WsActorMsg::None);
                     (Some(build_tx), Some(build_rx))
                 } else {
                     (None, None)
                 };
 
-                let server = start_web_server(build_rx,
-                                              web_args.output_dir.clone(),
-                                              web_args.serve.as_ref().unwrap().clone(),
-                                              web_args.public_dir.as_ref().unwrap().clone());
+                let server = start_web_server(
+                    WebServerState {
+                        output_dir: web_args.output_dir.clone(),
+                        public_dir: web_args.public_dir.clone(),
+                        rx: build_rx,
+                    },
+                    web_args.serve.as_ref().unwrap().clone(),
+                );
                 let watcher = Self::watch(this, build_tx);
 
                 // wait for both to complete and set context for each
@@ -94,10 +98,13 @@ impl WebPipeline {
             }
             // if only serve
             else if let Some(serve) = &web_args.serve {
-                start_web_server(None,
-                                 web_args.output_dir.clone(),
-                                 serve.clone(),
-                                 web_args.public_dir.as_ref().unwrap().clone(),
+                start_web_server(
+                    WebServerState {
+                        output_dir: web_args.output_dir.clone(),
+                        public_dir: web_args.public_dir.clone(),
+                        rx: None,
+                    },
+                    serve.clone(),
                 ).await.with_context(|| SERVER_ERROR)??;
             }
             // if only watch
@@ -110,7 +117,7 @@ impl WebPipeline {
 
     pub fn watch(
         this: Self,
-        build_tx: Option<watch::Sender<ActorMsg>>,
+        build_tx: Option<watch::Sender<WsActorMsg>>,
     ) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
         task::spawn(async move {
             info!("Watching");
@@ -140,7 +147,7 @@ impl WebPipeline {
                     _ => {
                         this.build_full().await?;
                         if let Some(build_tx) = &build_tx {
-                            build_tx.send(ActorMsg::FileChange(this.wasm_hashed_name.clone()))?;
+                            build_tx.send(WsActorMsg::FileChange(this.wasm_hashed_name.clone()))?;
                         }
                     }
                 }
