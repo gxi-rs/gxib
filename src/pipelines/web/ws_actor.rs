@@ -9,6 +9,8 @@ use std::time::{Duration, Instant};
 use tokio::sync::watch;
 use tokio::task;
 use std::path::PathBuf;
+use actix_files::NamedFile;
+use actix_web::http::StatusCode;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -118,7 +120,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
     }
 }
 
-async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
+async fn web_socket_route(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
     ws::start(
         WsActor {
             heartbeat: Instant::now(),
@@ -133,10 +135,54 @@ async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, E
     )
 }
 
+#[actix_web::get("/*")]
+async fn index(req: HttpRequest) -> Result<HttpResponse, Error> {
+    let path = req.uri().path();
+    // rm / from path
+    let mut path = PathBuf::from(&path[1..]);
+    // if uri contains an extension then its a static file
+    const OUT_DIR: &str = "target/.gxi";
+    const PUBLIC_DIR: &str = "examples/web/public";
+   // let mut mime = actix_files::file_extension_to_mime("html");
+    if {
+        if let Some(ext) = path.extension() {
+            let ext = ext.to_str().unwrap();
+            // if extension is html then serve index.html
+            let is_html = ext == "html";
+            if !is_html {
+              //  mime = actix_files::file_extension_to_mime(ext);
+                //check if file exists in output dir
+                let output_path = PathBuf::from(OUT_DIR).join(&path);
+                if output_path.exists() {
+                    path = output_path;
+                } else {
+                    path = PathBuf::from(PUBLIC_DIR).join(&path);
+                }
+            }
+            is_html
+        } else {
+            // if path has no extension then serve html
+            true
+        }
+    } {
+        path = PathBuf::from(OUT_DIR).join("index.html")
+    }
+    // if path exist then serve it
+    return if path.exists() {
+        Ok(actix_files::NamedFile::open(path)?
+            .prefer_utf8(true)
+            .into_response(&req)?
+        )
+    } else {
+        Ok(HttpResponse::new(StatusCode::NOT_FOUND))
+    };
+}
+
 pub fn start_web_server(
     rx: Option<watch::Receiver<ActorMsg>>,
     serve_dir: PathBuf,
     serve_addrs: String,
+    public_dir: PathBuf,
 ) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async move {
         actix_web::rt::System::new("web server").block_on(async move {
@@ -148,12 +194,14 @@ pub fn start_web_server(
                 } else {
                     App::new()
                 }
-                    .route("/__gxi__", web::get().to(index))
+                    .route("/__gxi__", web::get().to(web_socket_route))
+                    .service(index)/*
                     .service(
                         actix_files::Files::new("/", serve_dir.clone())
                             .prefer_utf8(true)
-                            .index_file("index.html"),
-                    )
+                            .index_file("index.html")
+                            .default_handler(index)
+                    )*/
             })
                 .disable_signals()
                 .bind(serve_addrs.clone())?

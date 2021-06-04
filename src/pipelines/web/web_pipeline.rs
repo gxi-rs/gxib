@@ -81,7 +81,10 @@ impl WebPipeline {
                     (None, None)
                 };
 
-                let server = start_web_server(build_rx, web_args.output_dir.clone(), web_args.serve.as_ref().unwrap().clone());
+                let server = start_web_server(build_rx,
+                                              web_args.output_dir.clone(),
+                                              web_args.serve.as_ref().unwrap().clone(),
+                                              web_args.public_dir.as_ref().unwrap().clone());
                 let watcher = Self::watch(this, build_tx);
 
                 // wait for both to complete and set context for each
@@ -91,7 +94,11 @@ impl WebPipeline {
             }
             // if only serve
             else if let Some(serve) = &web_args.serve {
-                start_web_server(None, web_args.output_dir.clone(), serve.clone()).await.with_context(|| SERVER_ERROR)??;
+                start_web_server(None,
+                                 web_args.output_dir.clone(),
+                                 serve.clone(),
+                                 web_args.public_dir.as_ref().unwrap().clone(),
+                ).await.with_context(|| SERVER_ERROR)??;
             }
             // if only watch
             else if web_args.watch {
