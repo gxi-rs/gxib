@@ -13,7 +13,7 @@ pub struct WebArgs {
     #[clap(short, long, value_hint = ValueHint::Hostname)]
     pub serve: Option<String>,
     /// public dir containing static files eg. css served at /
-    #[clap(lang = "public-dir", short, value_hint = ValueHint::DirPath, requires = "serve")]
+    #[clap(long = "public-dir", short, value_hint = ValueHint::DirPath, requires = "serve")]
     pub public_dir: Option<PathBuf>,
     /// build on file change
     #[clap(short, long)]
