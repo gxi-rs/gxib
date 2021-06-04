@@ -48,6 +48,18 @@ impl WebPipeline {
                     )
                 })?
                 .to_path_buf();
+            // make output dir absolute
+            if let Some(public_dir) = &mut web_args.public_dir {
+                *public_dir = public_dir
+                    .absolutize()
+                    .with_context(|| {
+                        format!(
+                            "error getting absolute path for --public-dir {}",
+                            public_dir.to_str().unwrap()
+                        )
+                    })?
+                    .to_path_buf();
+            }
         }
         let mut this = Self {
             args,
