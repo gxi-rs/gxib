@@ -16,7 +16,8 @@ pub struct WebServerState {
     pub rx: Option<watch::Receiver<WsActorMsg>>,
 }
 
-async fn web_socket_route(state: web::Data<WebServerState>, req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
+async fn web_socket_route(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
+    let state: &WebServerState = req.app_data().unwrap();
     ws::start(
         WsActor {
             heartbeat: Instant::now(),
