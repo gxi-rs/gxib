@@ -2,15 +2,14 @@
 use crate::*;
 use actix::prelude::*;
 use actix::{Actor, StreamHandler};
+use actix_web::http::StatusCode;
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
 use futures::future::Future;
+use std::path::PathBuf;
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
 use tokio::task;
-use std::path::PathBuf;
-use actix_files::NamedFile;
-use actix_web::http::StatusCode;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -143,14 +142,14 @@ async fn index(req: HttpRequest) -> Result<HttpResponse, Error> {
     // if uri contains an extension then its a static file
     const OUT_DIR: &str = "target/.gxi";
     const PUBLIC_DIR: &str = "examples/web/public";
-   // let mut mime = actix_files::file_extension_to_mime("html");
+    // let mut mime = actix_files::file_extension_to_mime("html");
     if {
         if let Some(ext) = path.extension() {
             let ext = ext.to_str().unwrap();
             // if extension is html then serve index.html
             let is_html = ext == "html";
             if !is_html {
-              //  mime = actix_files::file_extension_to_mime(ext);
+                //  mime = actix_files::file_extension_to_mime(ext);
                 //check if file exists in output dir
                 let output_path = PathBuf::from(OUT_DIR).join(&path);
                 if output_path.exists() {
@@ -171,8 +170,7 @@ async fn index(req: HttpRequest) -> Result<HttpResponse, Error> {
     return if path.exists() {
         Ok(actix_files::NamedFile::open(path)?
             .prefer_utf8(true)
-            .into_response(&req)?
-        )
+            .into_response(&req)?)
     } else {
         Ok(HttpResponse::new(StatusCode::NOT_FOUND))
     };
@@ -183,31 +181,24 @@ pub fn start_web_server(
     serve_dir: PathBuf,
     serve_addrs: String,
     public_dir: PathBuf,
-) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
+) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async move {
         actix_web::rt::System::new("web server").block_on(async move {
             info!("Serving at http://{}", serve_addrs);
             HttpServer::new(move || {
                 if let Some(rx) = &rx {
-                    App::new()
-                        .app_data(rx.clone())
+                    App::new().app_data(rx.clone())
                 } else {
                     App::new()
                 }
-                    .route("/__gxi__", web::get().to(web_socket_route))
-                    .service(index)/*
-                    .service(
-                        actix_files::Files::new("/", serve_dir.clone())
-                            .prefer_utf8(true)
-                            .index_file("index.html")
-                            .default_handler(index)
-                    )*/
+                .route("/__gxi__", web::get().to(web_socket_route))
+                .service(index)
             })
-                .disable_signals()
-                .bind(serve_addrs.clone())?
-                .run()
-                .await
-                .with_context(|| "Error running web server")?;
+            .disable_signals()
+            .bind(serve_addrs.clone())?
+            .run()
+            .await
+            .with_context(|| "Error running web server")?;
             Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
         })?;
         Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
