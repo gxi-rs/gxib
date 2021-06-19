@@ -78,7 +78,7 @@ pub fn start_web_server(
 ) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async move {
         actix_web::rt::System::new("web server").block_on(async move {
-            info!("Serving at http://{}", serve_addrs);
+            info!("initialising server to listen at http://{}", serve_addrs);
             HttpServer::new(move || {
                 App::new()
                     .app_data(state.clone())
