@@ -4,7 +4,7 @@ gxi! {
     App {}
     render {
         Window [
-            Text ( label = "Hello World" )
+            Text ( set_label = "Hello World" )
         ]
     }
 }
