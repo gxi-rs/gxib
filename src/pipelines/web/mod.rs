@@ -1,5 +1,5 @@
+pub use server::*;
 pub use web_pipeline::*;
-pub use ws_actor::*;
 
+mod server;
 mod web_pipeline;
-mod ws_actor;
