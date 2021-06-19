@@ -9,5 +9,5 @@ wee_alloc = "0.4.5"
 
 [dependencies.gxi]
 path = "../../../gxi"
-version = ""
+version = "0.3.0-alpha.1"
 features = ["web"]

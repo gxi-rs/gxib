@@ -29,10 +29,7 @@ pub struct WebArgs {
     /// production build
     #[clap(long)]
     pub release: bool,
-    /// target dir for cargo builds.
-    #[clap(long = "target-dir", short, default_value = "target", value_hint = ValueHint::DirPath)]
-    pub target_dir: PathBuf,
-    /// output dir for cargo builds.
+    /// output dir to keep build artifacts
     #[clap(long = "output-dir", short, default_value = "target/.gxi", value_hint = ValueHint::DirPath)]
     pub output_dir: PathBuf,
 }

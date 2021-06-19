@@ -1,18 +1,20 @@
-use clap::{AppSettings, Clap};
+use clap::{AppSettings, Clap, ValueHint};
 
 use crate::*;
+use std::path::PathBuf;
 
 #[derive(Clap)]
 #[clap(
-    version = clap::crate_version!(),
-    author = "aniketfuryrocks <prajapati.ani306@gmail.com>",
-    setting = AppSettings::ColoredHelp
+version = clap::crate_version ! (),
+author = "aniketfuryrocks <prajapati.ani306@gmail.com>",
+setting = AppSettings::ColoredHelp
 )]
 pub struct Args {
-    #[clap(short, long, default_value = "./")]
-    pub dir: String,
+    /// project dir
+    #[clap(long = "project-dir", short = 'd', value_hint = ValueHint::DirPath, default_value = "./")]
+    pub project_dir: PathBuf,
     #[clap(subcommand)]
-    pub subcmd: SubCommands,
+    pub sub_cmd: SubCommands,
 }
 
 #[derive(Clap)]

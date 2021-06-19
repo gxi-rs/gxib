@@ -14,8 +14,6 @@ mod cli;
 mod pipelines;
 mod utils;
 
-pub const CARGO_TOML: &str = "Cargo.toml";
-
 #[tokio::main]
 async fn main() -> Result<()> {
     TermLogger::init(
@@ -26,14 +24,12 @@ async fn main() -> Result<()> {
     )?;
     // get the command line arguments
     let args: Args = Args::parse();
-    // parse Cargo.toml
-    let mut cargo_toml = CargoToml::from_file(Path::new(&args.dir).join(CARGO_TOML)).await?;
     // match sub commands
-    match args.subcmd {
+    match args.sub_cmd {
         //web
         SubCommands::Web(_) => {
             info!("Building Web App");
-            let web_pipeline = WebPipeline::new(args, cargo_toml).await?;
+            let web_pipeline = WebPipeline::new(args).await?;
             WebPipeline::run(web_pipeline)
                 .await
                 .with_context(|| "Error running web pipeline")?;
@@ -43,7 +39,6 @@ async fn main() -> Result<()> {
             info!("Building Desktop App");
             DesktopPipeline {
                 args: &args,
-                cargo_toml: &mut cargo_toml,
             }
             .run()
             .await
