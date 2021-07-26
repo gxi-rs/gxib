@@ -37,12 +37,10 @@ async fn main() -> Result<()> {
         //desktop
         _ => {
             info!("Building Desktop App");
-            DesktopPipeline {
-                args: &args,
-            }
-            .run()
-            .await
-            .with_context(|| "Error running desktop pipeline")?;
+            DesktopPipeline { args: &args }
+                .run()
+                .await
+                .with_context(|| "Error running desktop pipeline")?;
         }
     };
     Ok(())

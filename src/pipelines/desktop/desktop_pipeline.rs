@@ -1,5 +1,5 @@
 use crate::cli::Args;
-use crate::utils::{exec_cmd};
+use crate::utils::exec_cmd;
 use crate::*;
 
 pub const DESKTOP_FEATURE: &str = "desktop";

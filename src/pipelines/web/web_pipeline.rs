@@ -114,8 +114,8 @@ impl WebPipeline {
                     },
                     serve.clone(),
                 )
-                    .await
-                    .with_context(|| SERVER_ERROR)??;
+                .await
+                .with_context(|| SERVER_ERROR)??;
             }
             // if only watch
             else if web_args.watch {
@@ -130,11 +130,12 @@ impl WebPipeline {
     pub fn watch(
         this: Self,
         build_tx: Option<watch::Sender<WsActorMsg>>,
-    ) -> impl Future<Output=Result<Result<()>, task::JoinError>> {
+    ) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
         task::spawn(async move {
             info!("Watching");
             let (tx, mut rx) = watch::channel(());
-            let mut watcher = RecommendedWatcher::new(move |res: notify::Result<event::Event>| match res {
+            let mut watcher =
+                RecommendedWatcher::new(move |res: notify::Result<event::Event>| match res {
                     Ok(event) => {
                         if let event::EventKind::Modify(modify_event) = &event.kind {
                             if let event::ModifyKind::Data(_) = modify_event {
@@ -144,12 +145,14 @@ impl WebPipeline {
                     }
                     Err(e) => error!("Error while watching dir\n{}", e),
                 })
-                    .with_context(|| "Error initialising watcher")?;
+                .with_context(|| "Error initialising watcher")?;
             {
                 let watch_path = this.args.project_dir.join("src");
                 watcher
                     .watch(&watch_path, RecursiveMode::Recursive)
-                    .with_context(|| format!("error watching {}/src", watch_path.to_str().unwrap()))?;
+                    .with_context(|| {
+                        format!("error watching {}/src", watch_path.to_str().unwrap())
+                    })?;
             }
             while rx.changed().await.is_ok() {
                 info!("Re-building");
@@ -186,7 +189,7 @@ impl WebPipeline {
             Path::new(&web_args.output_dir).join("index.html"),
             self.generate_html(),
         )
-            .await?;
+        .await?;
         Ok(())
     }
 
@@ -199,7 +202,7 @@ impl WebPipeline {
             Some(&web_sub_cmd.output_dir),
             None,
         )
-            .await?;
+        .await?;
         Ok(())
     }
 
@@ -207,7 +210,8 @@ impl WebPipeline {
     /// target/wasm32-unknown-unknown/{release/debug}/<name>.wasm
     pub fn generate_path_to_target_wasm(&self) -> Result<PathBuf> {
         let web_sub_cmd = self.args.sub_cmd.as_web()?;
-        let path = self.target_dir
+        let path = self
+            .target_dir
             .join(WEB_TARGET)
             .join(if web_sub_cmd.release {
                 "release"
@@ -234,11 +238,7 @@ impl WebPipeline {
     /// run cargo build
     pub async fn build(&self) -> Result<()> {
         let web_sub_cmd = self.args.sub_cmd.as_web()?;
-        let mut args = vec![
-            "build",
-            "--target",
-            WEB_TARGET,
-        ];
+        let mut args = vec!["build", "--target", WEB_TARGET];
         if web_sub_cmd.release {
             args.push("--release")
         }
