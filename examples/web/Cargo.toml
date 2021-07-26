@@ -6,4 +6,4 @@ edition = "2018"
 
 [dependencies]
 wee_alloc = "0.4.5"
-gxi = { version = "0.3.0-alpha.1", features = ["desktop"] }
+gxi = { version = "0.3.0-alpha.2", features = ["web"] }
