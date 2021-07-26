@@ -134,8 +134,7 @@ impl WebPipeline {
         task::spawn(async move {
             info!("Watching");
             let (tx, mut rx) = watch::channel(());
-            let mut watcher: RecommendedWatcher =
-                Watcher::new_immediate(move |res: notify::Result<event::Event>| match res {
+            let mut watcher = RecommendedWatcher::new(move |res: notify::Result<event::Event>| match res {
                     Ok(event) => {
                         if let event::EventKind::Modify(modify_event) = &event.kind {
                             if let event::ModifyKind::Data(_) = modify_event {
@@ -275,7 +274,7 @@ impl WebPipeline {
             None,
         )
             .await
-            .with_context(|| format!("error running cargo-bindgen on "))?;
+            .with_context(|| format!("error running cargo-bindgen. Make sure it is in path. Consider Installing it using `cargo install wasm-bindgen-cli`"))?;
         Ok(())
     }
 
