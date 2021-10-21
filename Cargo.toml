@@ -13,7 +13,7 @@ categories = ["command-line-utilities", "development-tools::build-utils", "web-p
 members = ["examples/web", "examples/desktop"]
 
 [dependencies]
-clap = "3.0.0-beta.5"
+clap = "=3.0.0-beta.5"
 notify = "5.0.0-pre"
 anyhow = "1.0.40"
 seahash = "4.1.0"
