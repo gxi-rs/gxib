@@ -1,13 +1,12 @@
-use clap::{AppSettings, Clap, ValueHint};
+use clap::{Parser, ValueHint};
 
 use crate::*;
 use std::path::PathBuf;
 
-#[derive(Clap)]
+#[derive(Parser)]
 #[clap(
 version = clap::crate_version ! (),
-author = "aniketfuryrocks <prajapati.ani306@gmail.com>",
-setting = AppSettings::ColoredHelp
+author = crate::author!()
 )]
 pub struct Args {
     /// project dir
@@ -17,7 +16,7 @@ pub struct Args {
     pub sub_cmd: SubCommands,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub enum SubCommands {
     Web(WebArgs),
     Desktop(DesktopArgs),

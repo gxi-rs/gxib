@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use clap::Clap;
 use simplelog::*;
 use tokio::fs::{read, write};
 
@@ -8,9 +7,11 @@ pub use crate::cli::*;
 pub use crate::pipelines::*;
 pub use crate::utils::*;
 pub use anyhow::*;
+use clap::Parser;
 pub use log::*;
 
 mod cli;
+mod macros;
 mod pipelines;
 mod utils;
 

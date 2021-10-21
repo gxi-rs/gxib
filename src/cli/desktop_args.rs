@@ -1,10 +1,9 @@
-use clap::{AppSettings, Clap};
+use clap::Parser;
 
 /// build for the desktop platform using gtk
-#[derive(Clap)]
+#[derive(Parser)]
 #[clap(
 version = clap::crate_version!(),
-author = "aniketfuryrocks <prajapati.ani306@gmail.com>",
-setting = AppSettings::ColoredHelp
+author = crate::author!()
 )]
 pub struct DesktopArgs {}

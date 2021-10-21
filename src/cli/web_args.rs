@@ -1,12 +1,11 @@
-use clap::{AppSettings, Clap, ValueHint};
+use clap::{Parser, ValueHint};
 use std::path::PathBuf;
 
 /// build for the web platform using wasm
-#[derive(Clap)]
+#[derive(Parser)]
 #[clap(
 version = clap::crate_version!(),
-author = "aniketfuryrocks <prajapati.ani306@gmail.com>",
-setting = AppSettings::ColoredHelp
+author = crate::author!()
 )]
 pub struct WebArgs {
     /// start serving files at host:port
