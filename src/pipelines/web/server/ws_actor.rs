@@ -2,9 +2,9 @@
 use actix::prelude::*;
 use actix::{Actor, StreamHandler};
 use actix_web_actors::ws;
+use anyhow::Context;
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
-use anyhow::Context;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);

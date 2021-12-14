@@ -6,7 +6,7 @@ use futures::future::Future;
 use log::error;
 use notify::{event, RecommendedWatcher, RecursiveMode, Watcher};
 use path_absolutize::Absolutize;
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 use tokio::fs::write;
 use tokio::sync::watch;
 use tokio::task;

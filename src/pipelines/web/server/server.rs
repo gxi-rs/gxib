@@ -2,7 +2,7 @@ use crate::pipelines::web::server::ws_actor::{WsActor, WsActorMsg};
 use actix_web::http::StatusCode;
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
-use anyhow::{anyhow, Result, Context};
+use anyhow::{anyhow, Context, Result};
 use futures::future::Future;
 use log::info;
 use std::path::PathBuf;
