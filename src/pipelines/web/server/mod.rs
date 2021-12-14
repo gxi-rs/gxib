@@ -1,5 +1,5 @@
-mod server;
+mod ws;
 mod ws_actor;
 
-pub use server::*;
+pub use ws::*;
 pub use ws_actor::*;

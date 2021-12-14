@@ -141,10 +141,10 @@ impl WebPipeline {
             let mut watcher =
                 RecommendedWatcher::new(move |res: notify::Result<event::Event>| match res {
                     Ok(event) => {
-                        if let event::EventKind::Modify(modify_event) = &event.kind {
-                            if let event::ModifyKind::Data(_) = modify_event {
-                                tx.send(()).unwrap();
-                            }
+                        if let event::EventKind::Modify(event::ModifyKind::Data(_)) =
+                            &event.kind
+                        {
+                            tx.send(()).unwrap();
                         }
                     }
                     Err(e) => error!("Error while watching dir\n{}", e),
@@ -248,7 +248,7 @@ impl WebPipeline {
         }
         exec_cmd("cargo", &args, Some(&self.args.project_dir), None)
             .await
-            .with_context(|| format!("error running cargo to build for web"))?;
+            .context("error running cargo to build for web")?;
         Ok(())
     }
 
@@ -257,7 +257,7 @@ impl WebPipeline {
         let web_subcmd = self.args.sub_cmd.as_web()?;
         exec_cmd(
             "wasm-bindgen",
-            &vec![
+            &[
                 self.generate_path_to_target_wasm()
                     .unwrap()
                     .to_str()
@@ -278,7 +278,7 @@ impl WebPipeline {
             None,
         )
             .await
-            .with_context(|| format!("error running cargo-bindgen. Make sure it is in path. Consider Installing it using `cargo install wasm-bindgen-cli`"))?;
+            .context("error running cargo-bindgen. Make sure it is in path. Consider Installing it using `cargo install wasm-bindgen-cli`")?;
         Ok(())
     }
 

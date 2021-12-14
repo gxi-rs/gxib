@@ -22,11 +22,7 @@ async fn web_socket_route(req: HttpRequest, stream: web::Payload) -> Result<Http
     ws::start(
         WsActor {
             heartbeat: Instant::now(),
-            rx: if let Some(rx) = &state.rx {
-                Some(rx.clone())
-            } else {
-                None
-            },
+            rx: state.rx.as_ref().cloned(),
         },
         &req,
         stream,
@@ -38,39 +34,37 @@ async fn index(req: HttpRequest) -> Result<HttpResponse, Error> {
     let path = req.uri().path();
     let mut path = PathBuf::from(&path[1..]); // rm / from path
     let state: &WebServerState = req.app_data().unwrap();
-    if {
-        // if uri contains an extension then its a static file
-        if let Some(ext) = path.extension() {
-            let ext = ext.to_str().unwrap();
-            // if extension is html then serve index.html
-            let is_html = ext == "html";
-            if !is_html {
-                //check if file exists in output dir
-                let output_path = PathBuf::from(&state.output_dir).join(&path);
-                if output_path.exists() {
-                    path = output_path;
-                } else if let Some(public_dir) = &state.public_dir {
-                    path = PathBuf::from(public_dir).join(&path);
-                } else {
-                    return Ok(HttpResponse::new(StatusCode::NOT_FOUND));
-                }
+    // if uri contains an extension then its a static file
+    if if let Some(ext) = path.extension() {
+        let ext = ext.to_str().unwrap();
+        // if extension is html then serve index.html
+        let is_html = ext == "html";
+        if !is_html {
+            //check if file exists in output dir
+            let output_path = PathBuf::from(&state.output_dir).join(&path);
+            if output_path.exists() {
+                path = output_path;
+            } else if let Some(public_dir) = &state.public_dir {
+                path = PathBuf::from(public_dir).join(&path);
+            } else {
+                return Ok(HttpResponse::new(StatusCode::NOT_FOUND));
             }
-            is_html
-        } else {
-            // if path has no extension then serve html
-            true
         }
+        is_html
+    } else {
+        // if path has no extension then serve html
+        true
     } {
         path = PathBuf::from(&state.output_dir).join("index.html")
     }
     // if path exist then serve it
-    return if path.exists() {
+    if path.exists() {
         Ok(actix_files::NamedFile::open(path)?
             .prefer_utf8(true)
             .into_response(&req))
     } else {
         Ok(HttpResponse::new(StatusCode::NOT_FOUND))
-    };
+    }
 }
 
 pub fn start_web_server(
