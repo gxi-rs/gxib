@@ -7,26 +7,30 @@ description = "build tool for the gxi-rs project"
 repository = "https://github.com/gxi-rs/gxib.git"
 license = "MIT"
 keywords = ["gxi-rs", "build-tool"]
-categories = ["command-line-utilities", "development-tools::build-utils", "web-programming"]
+categories = [
+  "command-line-utilities",
+  "development-tools::build-utils",
+  "web-programming",
+]
 
 [workspace]
 members = ["examples/web", "examples/desktop"]
 
 [dependencies]
-clap = "=3.0.0-beta.5"
-notify = "5.0.0-pre"
-anyhow = "1.0.40"
+clap = { version = "3.0.0-rc.4", features = ["derive", "cargo"] }
+notify = "5.0.0-pre.13"
+anyhow = "1.0.51"
 seahash = "4.1.0"
-path-absolutize = "3.0.10"
-futures = "0.3.15"
-actix-web = "3"
-actix-web-actors = "3"
-actix-files = "0.5.0"
-actix = "0.10"
-simplelog = "0.10.0"
-log = "0.4"
-cargo_metadata = "0.13.1"
+path-absolutize = "3.0.11"
+futures = "0.3.18"
+actix-web = "4.0.0-beta.14"
+actix-web-actors = "4.0.0-beta.8"
+actix-files = "0.6.0-beta.10"
+actix = "0.12.0"
+simplelog = "0.11.1"
+log = "0.4.14"
+cargo_metadata = "0.14.1"
 
 [dependencies.tokio]
-version = "1"
+version = "1.14.0"
 features = ["full", "process"]

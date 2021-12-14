@@ -1,10 +1,9 @@
-use crate::*;
+use gxi::{gxi, Body, StrongNodeType, Text};
 
-gxi! {
-    pub App {}
-    render {
+pub fn app() -> StrongNodeType {
+    gxi! {
         Body [
-            H1 ( inner_html = "hello-world" )
+            Text ( value = "hello-world" )
         ]
     }
 }

@@ -1,6 +1,6 @@
 # Gxib
 
-*build tool for the gxi-rs project*
+**build tool for the gxi-rs project**
 
 ## Install
 
@@ -12,50 +12,34 @@ cargo install gxib
 
 Run in project root dir.
 
-### Desktop
+## Web
 
-*Dev Environment Requirements*
+### Requirements
 
-* [Gtk 3](https://www.gtk.org/docs/installations/)
+- install `wasm32-unknown-unknown` architecture
 
-*Running* 
-```bash
-gxib desktop
-```
-
-### Web
-*Dev Environment Requirements*
-
-* install `wasm32-unknown-unknown` architecture
   ```bash
   rustup target add wasm32-unknown-unknown
   ```
-* [Wasm Bindgen CLi](https://rustwasm.github.io/wasm-bindgen/reference/cli.html) 
+
+- [Wasm Bindgen CLi](https://rustwasm.github.io/wasm-bindgen/reference/cli.html)
+
   ```bash
   cargo install wasm-bindgen-cli
-  ```  
-* [Binaryen](https://github.com/WebAssembly/binaryen) 
-  for reducing wasm bundle size with `wasm-opt -Oz`
-  ```bash
-  cargo install cargo-wasi
   ```
 
-*Running*
+- [Binaryen](https://www.google.com/search?q=install+binaryen)
+  for reducing wasm bundle size with `wasm-opt -Oz`
+
+## Run
+
 ```bash
 gxib web
 ```
 
-## Other Args
-
-Run help to list other commands and args
-
-```bash
-gxib help
-```
-
 ## Roadmap
 
-* [X] Basic desktop gtk builds
-* [X] Basic wasm builds
-* [ ] Desktop hot reload
-* [ ] Web and Desktop hot refresh without losing state
+- [x] Basic desktop gtk builds
+- [x] Basic wasm builds
+- [ ] Desktop hot reload
+- [ ] Web and Desktop hot refresh without losing state

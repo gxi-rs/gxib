@@ -1,6 +1,6 @@
+use anyhow::{Context, Result};
 use std::path::Path;
-
-use crate::*;
+use tokio::fs::read;
 
 pub async fn get_file_hash(path: impl AsRef<Path>) -> Result<String> {
     Ok(seahash::hash(&read(&path).await.with_context(|| {

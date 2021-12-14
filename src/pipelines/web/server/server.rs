@@ -1,9 +1,10 @@
 use crate::pipelines::web::server::ws_actor::{WsActor, WsActorMsg};
-use crate::*;
 use actix_web::http::StatusCode;
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
+use anyhow::{anyhow, Result, Context};
 use futures::future::Future;
+use log::info;
 use std::path::PathBuf;
 use std::time::Instant;
 use tokio::sync::watch;
@@ -66,7 +67,7 @@ async fn index(req: HttpRequest) -> Result<HttpResponse, Error> {
     return if path.exists() {
         Ok(actix_files::NamedFile::open(path)?
             .prefer_utf8(true)
-            .into_response(&req)?)
+            .into_response(&req))
     } else {
         Ok(HttpResponse::new(StatusCode::NOT_FOUND))
     };
@@ -77,8 +78,8 @@ pub fn start_web_server(
     serve_addrs: String,
 ) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
     tokio::task::spawn(async move {
-        actix_web::rt::System::new("web server").block_on(async move {
-            info!("initialising server to listen at http://{}", serve_addrs);
+        actix_web::rt::System::new().block_on(async move {
+            info!("initializing server to listen at http://{}", serve_addrs);
             HttpServer::new(move || {
                 App::new()
                     .app_data(state.clone())
