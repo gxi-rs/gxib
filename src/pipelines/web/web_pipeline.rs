@@ -141,9 +141,7 @@ impl WebPipeline {
             let mut watcher =
                 RecommendedWatcher::new(move |res: notify::Result<event::Event>| match res {
                     Ok(event) => {
-                        if let event::EventKind::Modify(event::ModifyKind::Data(_)) =
-                            &event.kind
-                        {
+                        if let event::EventKind::Modify(event::ModifyKind::Data(_)) = &event.kind {
                             tx.send(()).unwrap();
                         }
                     }
