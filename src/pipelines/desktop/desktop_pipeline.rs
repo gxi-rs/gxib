@@ -2,8 +2,6 @@ use crate::cli::Args;
 use crate::utils::exec_cmd;
 use crate::*;
 
-pub const DESKTOP_FEATURE: &str = "desktop";
-
 /// desktop pipeline using gtk
 pub struct DesktopPipeline<'a> {
     pub args: &'a Args,

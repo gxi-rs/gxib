@@ -11,7 +11,6 @@ use tokio::fs::write;
 use tokio::sync::watch;
 use tokio::task;
 
-pub const WEB_FEATURE: &str = "web";
 pub const WEB_TARGET: &str = "wasm32-unknown-unknown";
 
 /// web pipeline using wasm

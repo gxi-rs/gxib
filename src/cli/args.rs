@@ -29,22 +29,24 @@ impl SubCommands {
             _ => bail!("Expected subcommand to be web"),
         }
     }
-    pub fn as_desktop(&self) -> Result<&DesktopArgs> {
-        match self {
-            SubCommands::Desktop(arg) => Ok(arg),
-            _ => bail!("Expected subcommand to be web"),
-        }
-    }
     pub fn as_web_mut(&mut self) -> Result<&mut WebArgs> {
         match self {
             SubCommands::Web(arg) => Ok(arg),
             _ => bail!("Expected subcommand to be web"),
         }
     }
+    #[allow(dead_code)]
+    pub fn as_desktop(&self) -> Result<&DesktopArgs> {
+        match self {
+            SubCommands::Desktop(arg) => Ok(arg),
+            _ => bail!("Expected subcommand to be desktop"),
+        }
+    }
+    #[allow(dead_code)]
     pub fn as_desktop_mut(&mut self) -> Result<&mut DesktopArgs> {
         match self {
             SubCommands::Desktop(arg) => Ok(arg),
-            _ => bail!("Expected subcommand to be web"),
+            _ => bail!("Expected subcommand to be desktop"),
         }
     }
 }
