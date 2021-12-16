@@ -1,3 +1,5 @@
+[![Docker](https://github.com/gxi-rs/gxib/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/gxi-rs/gxib/actions/workflows/docker-publish.yml)
+
 # Gxib
 
 **build tool for the gxi-rs project**
