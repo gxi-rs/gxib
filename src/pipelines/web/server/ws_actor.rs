@@ -3,6 +3,7 @@ use actix::prelude::*;
 use actix::{Actor, StreamHandler};
 use actix_web_actors::ws;
 use anyhow::Context;
+use log::warn;
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
 
@@ -62,7 +63,7 @@ impl Actor for WsActor {
                             _ => adds
                                 .send(k.clone())
                                 .await
-                                .with_context(|| "Unable to send msg to actor")
+                                .context("Unable to send msg to actor")
                                 .unwrap(),
                         }
                     } else {
@@ -75,7 +76,7 @@ impl Actor for WsActor {
         ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
             // check client heartbeats
             if Instant::now().duration_since(act.heartbeat) > CLIENT_TIMEOUT {
-                eprintln!("Websocket Client heartbeat failed, disconnecting!");
+                warn!("Websocket Client heartbeat failed, disconnecting!");
                 ctx.stop();
             } else {
                 ctx.ping(b"");
