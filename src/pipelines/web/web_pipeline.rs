@@ -2,14 +2,12 @@ use crate::pipelines::{start_web_server, WebServerState, WsActorMsg};
 use crate::utils::{exec_cmd, get_file_hash};
 use crate::{info, Args};
 use anyhow::{anyhow, bail, Context, Result};
-use futures::future::Future;
 use log::error;
 use notify::{event, RecommendedWatcher, RecursiveMode, Watcher};
 use path_absolutize::Absolutize;
 use std::path::{Path, PathBuf};
 use tokio::fs::write;
 use tokio::sync::watch;
-use tokio::task;
 
 pub const WEB_TARGET: &str = "wasm32-unknown-unknown";
 
@@ -105,8 +103,8 @@ impl WebPipeline {
 
                 // wait for both to complete and set context for each
                 let (watcher_result, server_result) = tokio::join!(watcher, server);
-                watcher_result.with_context(|| WATCHER_ERROR)??;
-                server_result.with_context(|| SERVER_ERROR)??;
+                watcher_result.context(WATCHER_ERROR)?;
+                server_result.context(SERVER_ERROR)?;
             }
             // if only serve
             else if let Some(serve) = &web_args.serve {
@@ -119,59 +117,50 @@ impl WebPipeline {
                     serve.clone(),
                 )
                 .await
-                .with_context(|| SERVER_ERROR)??;
+                .context(SERVER_ERROR)?;
             }
             // if only watch
             else if web_args.watch {
-                Self::watch(this, None)
-                    .await
-                    .with_context(|| WATCHER_ERROR)??;
+                Self::watch(this, None).await.context(WATCHER_ERROR)?;
             }
         }
         Ok(())
     }
 
-    pub fn watch(
-        this: Self,
-        build_tx: Option<watch::Sender<WsActorMsg>>,
-    ) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
-        task::spawn(async move {
-            info!("Watching");
-            let (tx, mut rx) = watch::channel(());
-            let mut watcher =
-                RecommendedWatcher::new(move |res: notify::Result<event::Event>| match res {
-                    Ok(event) => {
-                        if let event::EventKind::Modify(event::ModifyKind::Data(_)) = &event.kind {
-                            tx.send(()).unwrap();
-                        }
+    pub async fn watch(this: Self, build_tx: Option<watch::Sender<WsActorMsg>>) -> Result<()> {
+        info!("Watching");
+        let (tx, mut rx) = watch::channel(());
+        let mut watcher =
+            RecommendedWatcher::new(move |res: notify::Result<event::Event>| match res {
+                Ok(event) => {
+                    if let event::EventKind::Modify(event::ModifyKind::Data(_)) = &event.kind {
+                        tx.send(()).unwrap();
                     }
-                    Err(e) => error!("Error while watching dir\n{}", e),
-                })
-                .with_context(|| "Error initialising watcher")?;
-            {
-                let watch_path = this.args.project_dir.join("src");
-                watcher
-                    .watch(&watch_path, RecursiveMode::Recursive)
-                    .with_context(|| {
-                        format!("error watching {}/src", watch_path.to_str().unwrap())
-                    })?;
-            }
-            while rx.changed().await.is_ok() {
-                info!("Re-building");
-                match this.build().await {
-                    Err(err) => error!("Error while building\n{}", err),
-                    // build full only when cargo build is successful
-                    _ => {
-                        this.build_full().await?;
-                        if let Some(build_tx) = &build_tx {
-                            build_tx.send(WsActorMsg::FileChange(this.wasm_hashed_name.clone()))?;
-                        }
+                }
+                Err(e) => error!("Error while watching dir\n{}", e),
+            })
+            .context("Error initializing watcher")?;
+        {
+            let watch_path = this.args.project_dir.join("src");
+            watcher
+                .watch(&watch_path, RecursiveMode::Recursive)
+                .with_context(|| format!("error watching {}/src", watch_path.to_str().unwrap()))?;
+        }
+        while rx.changed().await.is_ok() {
+            info!("Re-building");
+            match this.build().await {
+                Err(err) => error!("Error while building\n{}", err),
+                // build full only when cargo build is successful
+                _ => {
+                    this.build_full().await?;
+                    if let Some(build_tx) = &build_tx {
+                        build_tx.send(WsActorMsg::FileChange(this.wasm_hashed_name.clone()))?;
                     }
                 }
             }
+        }
 
-            Err::<(), anyhow::Error>(anyhow!("Watch exited unexpectedly"))
-        })
+        Err::<(), anyhow::Error>(anyhow!("Watch exited unexpectedly"))
     }
 
     /// builds bindings

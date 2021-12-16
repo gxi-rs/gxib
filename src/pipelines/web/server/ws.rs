@@ -3,12 +3,10 @@ use actix_web::http::StatusCode;
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
 use anyhow::{anyhow, Context, Result};
-use futures::future::Future;
 use log::info;
 use std::path::PathBuf;
 use std::time::Instant;
 use tokio::sync::watch;
-use tokio::task;
 
 #[derive(Clone)]
 pub struct WebServerState {
@@ -17,6 +15,7 @@ pub struct WebServerState {
     pub rx: Option<watch::Receiver<WsActorMsg>>,
 }
 
+#[actix_web::get("/__gxi__")]
 async fn web_socket_route(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
     let state: &WebServerState = req.app_data().unwrap();
     ws::start(
@@ -29,7 +28,6 @@ async fn web_socket_route(req: HttpRequest, stream: web::Payload) -> Result<Http
     )
 }
 
-#[actix_web::get("/*")]
 async fn index(req: HttpRequest) -> Result<HttpResponse, Error> {
     let path = req.uri().path();
     let mut path = PathBuf::from(&path[1..]); // rm / from path
@@ -67,26 +65,20 @@ async fn index(req: HttpRequest) -> Result<HttpResponse, Error> {
     }
 }
 
-pub fn start_web_server(
-    state: WebServerState,
-    serve_addrs: String,
-) -> impl Future<Output = Result<Result<()>, task::JoinError>> {
-    tokio::task::spawn(async move {
-        actix_web::rt::System::new().block_on(async move {
-            info!("initializing server to listen at http://{}", serve_addrs);
-            HttpServer::new(move || {
-                App::new()
-                    .app_data(state.clone())
-                    .route("/__gxi__", web::get().to(web_socket_route))
-                    .service(index)
-            })
-            .disable_signals()
-            .bind(serve_addrs.clone())?
-            .run()
-            .await
-            .with_context(|| "Error running web server")?;
-            Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
-        })?;
-        Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
+pub async fn start_web_server(state: WebServerState, serve_addrs: String) -> Result<()> {
+    info!("initializing server to listen at http://{}", serve_addrs);
+
+    HttpServer::new(move || {
+        App::new()
+            .app_data(state.clone())
+            .service(web_socket_route)
+            .default_service(web::route().to(index))
     })
+    .disable_signals()
+    .bind(serve_addrs.clone())?
+    .run()
+    .await
+    .context("Error running web server")?;
+
+    Err::<(), anyhow::Error>(anyhow!("Web server exited unexpectedly"))
 }
