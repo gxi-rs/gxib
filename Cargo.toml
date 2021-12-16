@@ -17,20 +17,20 @@ categories = [
 members = ["examples/web", "examples/desktop"]
 
 [dependencies]
-clap = { version = "3.0.0-rc.4", features = ["derive", "cargo"] }
-notify = "5.0.0-pre.13"
+clap = { version = "=3.0.0-rc.5", features = ["derive", "cargo"] }
+notify = "=5.0.0-pre.13"
 anyhow = "1.0.51"
 seahash = "4.1.0"
 path-absolutize = "3.0.11"
 futures = "0.3.17"
-actix-web = "4.0.0-beta.14"
-actix-web-actors = "4.0.0-beta.8"
-actix-files = "0.6.0-beta.10"
-actix = "0.12.0"
+actix-web = "=4.0.0-beta.14"
+actix-web-actors = "=4.0.0-beta.8"
+actix-files = "=0.6.0-beta.10"
+actix = "=0.12.0"
 simplelog = "0.11.1"
 log = "0.4.14"
-cargo_metadata = "0.14.1"
+cargo_metadata = "=0.14.1"
 
 [dependencies.tokio]
-version = "1.14.0"
+version = "1.15.0"
 features = ["full", "process"]
