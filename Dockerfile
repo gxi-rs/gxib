@@ -1,9 +1,8 @@
 FROM rust:latest
 
-WORKDIR /gxi
-
 RUN rustup target add wasm32-unknown-unknown
 RUN cargo install gxib
+RUN cargo install wasm-bindgen-cli
 
 # install binaryen
 RUN curl -L https://github.com/WebAssembly/binaryen/releases/download/version_103/binaryen-version_103-x86_64-linux.tar.gz > binaryen.tar.gz
