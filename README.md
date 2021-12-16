@@ -2,19 +2,46 @@
 
 **build tool for the gxi-rs project**
 
-## Install
-
-```bash
-cargo install gxib
-```
-
-## Usage
-
-Run in project root dir.
-
 ## Web
 
-### Requirements
+`gxib web` helps compile the project to ready to use `.wasm` files.
+
+Inbuilt web server with hot reload for faster development.
+
+```bash
+gxib web -wrs localhost:8080
+```
+
+### Docker
+
+contains all dependencies required for web builds
+
+_mounts current dir to /app and exports port 8080_
+
+```bash
+docker run \
+       -p 8080:8080 \
+       -v $(pwd):/app \
+       -it ghcr.io/gxi-rs/gxib:latest
+```
+
+### Run
+
+```bash
+cd /app
+gxib web
+```
+
+### Dependencies
+
+if you don't want to use the prebuilt docker image, the following dependencies need
+to be present in your dev environment.
+
+- install `gxib`
+
+  ```bash
+  cargo install gxib
+  ```
 
 - install `wasm32-unknown-unknown` architecture
 
@@ -30,12 +57,6 @@ Run in project root dir.
 
 - [Binaryen](https://www.google.com/search?q=install+binaryen)
   for reducing wasm bundle size with `wasm-opt -Oz`
-
-## Run
-
-```bash
-gxib web
-```
 
 ## Roadmap
 
