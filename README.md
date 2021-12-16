@@ -25,7 +25,7 @@ $ docker pull ghcr.io/gxi-rs/gxib:latest
 ```
 
 ```bash
-docker run \
+$ docker run \
        -p 8080:8080 \
        -v $(pwd):/app \
        -it ghcr.io/gxi-rs/gxib:latest
