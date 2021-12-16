@@ -11,7 +11,7 @@
 Inbuilt web server with hot reload for faster development.
 
 ```bash
-gxib web -wrs localhost:8080
+gxib web -wrs 0.0.0.0:8080
 ```
 
 ### [Docker](https://github.com/gxi-rs/gxib/pkgs/container/gxib)
@@ -19,6 +19,10 @@ gxib web -wrs localhost:8080
 contains all dependencies required for web builds
 
 _mounts current dir to /app and exports port 8080_
+
+```bash
+$ docker pull ghcr.io/gxi-rs/gxib:latest
+```
 
 ```bash
 docker run \
