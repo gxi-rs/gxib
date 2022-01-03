@@ -9,3 +9,7 @@ desktop:
 
 release:
 	cargo release $(args)
+
+clean:
+	cargo clean
+	rm ./Cargo.lock
