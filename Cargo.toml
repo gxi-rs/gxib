@@ -1,6 +1,6 @@
 [package]
 name = "gxib"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["aniketfuryrocks <contact@aniketprajapati.me>"]
 edition = "2018"
 description = "build tool for the gxi-rs project"
