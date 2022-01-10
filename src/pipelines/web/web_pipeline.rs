@@ -249,6 +249,7 @@ impl WebPipeline {
                     .unwrap()
                     .to_str()
                     .unwrap(),
+                "--omit-default-module-path",
                 // build for web
                 "--target",
                 "web",
