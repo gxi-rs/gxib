@@ -1,8 +1,8 @@
 [package]
 name = "gxib"
-version = "0.3.6"
+version = "0.3.7"
 authors = ["aniketfuryrocks <contact@aniketprajapati.me>"]
-edition = "2018"
+edition = "2021"
 description = "build tool for the gxi-rs project"
 repository = "https://github.com/gxi-rs/gxib.git"
 license = "MIT"
