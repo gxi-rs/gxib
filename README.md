@@ -46,7 +46,7 @@ to be present in your dev environment.
 - install `gxib`
 
   ```bash
-  cargo install gxib
+  cargo install gxib --locked
   ```
 
 - install `wasm32-unknown-unknown` architecture
