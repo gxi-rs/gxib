@@ -3,7 +3,7 @@ use crate::utils::{exec_cmd, get_file_hash};
 use crate::{info, Args};
 use anyhow::{anyhow, bail, Context, Result};
 use log::error;
-use notify::{event, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{event, recommended_watcher, RecursiveMode, Watcher};
 use path_absolutize::Absolutize;
 use std::path::{Path, PathBuf};
 use tokio::fs::write;
@@ -130,16 +130,15 @@ impl WebPipeline {
     pub async fn watch(this: Self, build_tx: Option<watch::Sender<WsActorMsg>>) -> Result<()> {
         info!("Watching");
         let (tx, mut rx) = watch::channel(());
-        let mut watcher =
-            RecommendedWatcher::new(move |res: notify::Result<event::Event>| match res {
-                Ok(event) => {
-                    if let event::EventKind::Modify(event::ModifyKind::Data(_)) = &event.kind {
-                        tx.send(()).unwrap();
-                    }
+        let mut watcher = recommended_watcher(move |res: notify::Result<event::Event>| match res {
+            Ok(event) => {
+                if let event::EventKind::Modify(event::ModifyKind::Data(_)) = &event.kind {
+                    tx.send(()).unwrap();
                 }
-                Err(e) => error!("Error while watching dir\n{}", e),
-            })
-            .context("Error initializing watcher")?;
+            }
+            Err(e) => error!("Error while watching dir\n{}", e),
+        })
+        .context("Error initializing watcher")?;
         {
             let watch_path = this.args.project_dir.join("src");
             watcher
